@@ -1,0 +1,58 @@
+# .gitignore para proyecto Python (Windows, FastAPI)
+# Ignorar entornos virtuales, archivos compilados, credenciales y archivos de editor/IDE
+
+## Entorno virtual
+venv/
+.venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+## Archivos de entorno / secretos
+.env
+.env.*
+secrets.env
+
+## Caché y archivos compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+## Pytest / mypy
+.pytest_cache/
+.mypy_cache/
+
+## Distribución / build
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+## Cobertura / reportes
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+## Bases de datos locales
+*.sqlite3
+db.sqlite3
+instance/
+
+## IDEs / editores
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+## Sistema (mac/windows)
+.DS_Store
+Thumbs.db
+desktop.ini
+
+## Otros
+.pytest_cache/
+__pycache__/
+
