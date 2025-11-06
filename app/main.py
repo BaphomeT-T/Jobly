@@ -1,25 +1,30 @@
+import os
 from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 import psycopg2.extras
-from db import get_db_connection, hash_password, verify_password, DDL_SQL
+# **********************************************
+# IMPORTACIÓN CORREGIDA: Usamos "." para la importación relativa
+from .db import get_db_connection, hash_password, verify_password, DDL_SQL 
+# **********************************************
 
 app = FastAPI(title="Jobly Backend API")
 
 # ----------------------------------------------------
 # 1. Rutas Estáticas y Servir HTML
-# Crea una carpeta 'static' en jobly_backend y pon index.html dentro.
 # ----------------------------------------------------
 
 # Monta la carpeta 'static' para servir archivos como CSS o JS.
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Usamos os.path.join para asegurar compatibilidad de rutas
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_home():
     """Sirve el archivo index.html para la pantalla de inicio."""
     try:
-        with open("static/index.html", "r") as f:
+        # Usamos 'utf-8' explícitamente y la ruta relativa corregida
+        with open(os.path.join(os.path.dirname(__file__), "static", "index.html"), "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
         return HTMLResponse("<h1>Error 404: Archivo index.html no encontrado.</h1>", status_code=404)
@@ -109,6 +114,3 @@ async def register_user(data: UserRegistration):
         raise HTTPException(status_code=500, detail="Error interno durante el registro.")
     finally:
         conn.close()
-
-# Nota: El endpoint de LOGIN necesitaría JWT o manejo de sesiones, 
-# se omite por simplicidad inicial, pero se debe agregar para un proyecto real.
