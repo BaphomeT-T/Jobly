@@ -6,8 +6,8 @@ from passlib.context import CryptContext
 # Carga las variables del archivo .env (solo para desarrollo local)
 load_dotenv()
 
-# Contexto para hashing de contraseñas
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Cambiado a pbkdf2_sha256 para evitar dependencias problemáticas de bcrypt en el entorno
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 def get_db_connection():
     """Establece y retorna la conexión a la base de datos PostgreSQL, usando DATABASE_PUBLIC_URL de Railway."""
@@ -50,7 +50,7 @@ def get_db_connection():
         return None
 
 def hash_password(password: str) -> str:
-    """Hashea una contraseña usando bcrypt."""
+    """Hashea una contraseña usando pbkdf2_sha256 por compatibilidad en entorno."""
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
