@@ -1,163 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jobly - Bolsa de Empleo</title>
-    <!-- Carga Tailwind CSS -->
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-    <style>
-        @import url('[https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap)');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7fafc;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jobly</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen flex items-center justify-center">
+<body class="min-h-screen flex items-center justify-center bg-gray-100">
+  <div class="text-center space-y-6">
+    <h1 class="text-3xl font-bold">Jobly</h1>
+    <p class="text-gray-600">Selecciona una opción</p>
 
-    <script>
-        // Función para mostrar mensajes en el modal/UI (reemplazo de alert)
-        function showMessage(title, message, isError = false) {
-            const modal = document.getElementById('message-modal');
-            document.getElementById('modal-title').textContent = title;
-            document.getElementById('modal-message').textContent = message;
-            
-            const header = document.getElementById('modal-header');
-            header.className = isError 
-                ? 'bg-red-500 text-white p-4 rounded-t-xl text-lg font-semibold' 
-                : 'bg-green-500 text-white p-4 rounded-t-xl text-lg font-semibold';
-            
-            modal.classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('message-modal').classList.add('hidden');
-        }
-
-        // ----------------------------------------------------
-        // Lógica de Registro (Conexión al Backend)
-        // ----------------------------------------------------
-        async function handleRegister(event) {
-            event.preventDefault();
-
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            const rol = document.getElementById('register-rol').value;
-
-            try {
-                const response = await fetch("/api/register/", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, rol })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showMessage("Registro Exitoso", `¡Bienvenido! Usuario ${rol} creado con ID: ${data.user_id}.`, false);
-                    document.getElementById('register-form').reset();
-                } else {
-                    showMessage("Error de Registro", data.detail || "Error desconocido al registrar el usuario.", true);
-                }
-            } catch (error) {
-                showMessage("Error de Conexión", "No se pudo conectar al servidor FastAIP.", true);
-            }
-        }
-        
-        // Asignar el listener al cargar la página
-        window.onload = function() {
-            const form = document.getElementById('register-form');
-            if (form) {
-                form.addEventListener('submit', handleRegister);
-            }
-        };
-    </script>
-
-
-    <!-- Contenedor Principal -->
-    <div class="p-8 w-full max-w-4xl flex flex-col md:flex-row bg-white rounded-3xl shadow-2xl space-y-8 md:space-y-0 md:space-x-8">
-        
-        <!-- Panel Izquierdo: Bienvenida -->
-        <div class="md:w-1/2 p-6 bg-pink-600 text-white rounded-2xl flex flex-col justify-center shadow-lg">
-            <h1 class="text-4xl font-bold mb-4">¡Bienvenido a Jobly!</h1>
-            <p class="text-pink-100 mb-8">
-                El portal de empleo que conecta a empresas y talentos. Regístrate para empezar a publicar o postular.
-            </p>
-            
-            <div class="space-y-4">
-                <button class="w-full py-3 bg-white text-pink-600 font-semibold rounded-xl shadow-md transition duration-300 hover:bg-pink-100" onclick="document.getElementById('login-card').classList.remove('hidden'); document.getElementById('register-card').classList.add('hidden');">
-                    Iniciar Sesión
-                </button>
-                <button class="w-full py-3 bg-pink-700 text-white font-semibold rounded-xl shadow-md transition duration-300 hover:bg-pink-800" onclick="document.getElementById('login-card').classList.add('hidden'); document.getElementById('register-card').classList.remove('hidden');">
-                    Crear Cuenta
-                </button>
-            </div>
-        </div>
-
-        <!-- Panel Derecho: Formularios -->
-        <div class="md:w-1/2 p-4">
-
-            <!-- Formulario de Login (Oculto por defecto) -->
-            <div id="login-card" class="hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Iniciar Sesión</h2>
-                <form id="login-form" onsubmit="event.preventDefault(); showMessage('Login', 'El login aún no está implementado en la API.', true);">
-                    <div class="mb-4">
-                        <label for="login-email" class="block text-gray-700 font-medium mb-2">Email</label>
-                        <input type="email" id="login-email" name="email" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-pink-500 focus:border-pink-500">
-                    </div>
-                    <div class="mb-6">
-                        <label for="login-password" class="block text-gray-700 font-medium mb-2">Contraseña</label>
-                        <input type="password" id="login-password" name="password" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-pink-500 focus:border-pink-500">
-                    </div>
-                    <button type="submit" class="w-full py-3 bg-pink-600 text-white font-semibold rounded-xl hover:bg-pink-700 transition duration-300">
-                        Entrar
-                    </button>
-                </form>
-            </div>
-            
-            <!-- Formulario de Registro (Visible por defecto) -->
-            <div id="register-card" class="">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Regístrate en Jobly</h2>
-                <form id="register-form" onsubmit="handleRegister(event)">
-                    <div class="mb-4">
-                        <label for="register-email" class="block text-gray-700 font-medium mb-2">Email</label>
-                        <input type="email" id="register-email" name="email" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-pink-500 focus:border-pink-500">
-                    </div>
-                    <div class="mb-4">
-                        <label for="register-password" class="block text-gray-700 font-medium mb-2">Contraseña</label>
-                        <input type="password" id="register-password" name="password" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-pink-500 focus:border-pink-500">
-                    </div>
-                    <div class="mb-6">
-                        <label for="register-rol" class="block text-gray-700 font-medium mb-2">Quiero registrarme como:</label>
-                        <select id="register-rol" name="rol" required class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-pink-500 focus:border-pink-500">
-                            <option value="Candidato">Candidato</option>
-                            <option value="Empresa">Empresa</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition duration-300">
-                        Registrarme
-                    </button>
-                </form>
-            </div>
-
-        </div>
-
+    <div class="space-y-4">
+      <button id="btn-login" class="w-64 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Iniciar Sesión</button>
+      <button id="btn-register" class="w-64 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700">Registrarse</button>
     </div>
-    
-    <!-- Modal para Mensajes (Reemplaza alert()) -->
-    <div id="message-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center">
-        <div class="bg-white rounded-xl shadow-xl w-96">
-            <div id="modal-header" class="p-4 rounded-t-xl text-lg font-semibold">Mensaje</div>
-            <div class="p-4">
-                <p id="modal-title" class="text-xl font-bold mb-2"></p>
-                <p id="modal-message" class="text-gray-700"></p>
-            </div>
-            <div class="p-4 border-t flex justify-end">
-                <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300">Cerrar</button>
-            </div>
-        </div>
-    </div>
+  </div>
 
+  <script>
+    // IDs listos para conectar a futuras pantallas
+    document.getElementById('btn-login').addEventListener('click', function () {
+      // Por ahora solo redirige a rutas que implementarás luego
+      window.location.href = '/login';
+    });
+    document.getElementById('btn-register').addEventListener('click', function () {
+      window.location.href = '/register';
+    });
+  </script>
 </body>
 </html>

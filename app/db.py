@@ -10,14 +10,27 @@ load_dotenv()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_db_connection():
-    """Establece y retorna la conexión a la base de datos PostgreSQL de Railway."""
+    """Establece y retorna la conexión a la base de datos PostgreSQL.
+    Prioriza DATABASE_URL (Railway). Añade sslmode=require si no está presente."""
+    # Intentar URL completa (Railway)
+    database_url = os.getenv("DATABASE_URL") or os.getenv("DATABASE_PUBLIC_URL")
     try:
+        if database_url:
+            # Asegurar sslmode=require para conexiones remotas
+            if "sslmode=" not in database_url:
+                if "?" in database_url:
+                    database_url = f"{database_url}&sslmode=require"
+                else:
+                    database_url = f"{database_url}?sslmode=require"
+            conn = psycopg2.connect(database_url)
+            return conn
+        # Fallback a variables separadas (desarrollo/local)
         conn = psycopg2.connect(
-            host=os.getenv('PG_HOST'),
-            port=os.getenv('PG_PORT'),
-            user=os.getenv('PG_USER'),
-            password=os.getenv('PG_PASSWORD'),
-            dbname=os.getenv('PG_NAME')
+            host=os.getenv('PGHOST') or os.getenv('PG_HOST'),
+            port=os.getenv('PGPORT') or os.getenv('PG_PORT') or 5432,
+            user=os.getenv('PGUSER') or os.getenv('PG_USER'),
+            password=os.getenv('PGPASSWORD') or os.getenv('PG_PASSWORD'),
+            dbname=os.getenv('PGDATABASE') or os.getenv('PG_NAME') or os.getenv('POSTGRES_DB')
         )
         return conn
     except Exception as e:
