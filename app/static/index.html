@@ -14,6 +14,7 @@
     <div class="space-y-4">
       <button id="btn-login" class="w-64 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700">Iniciar Sesión</button>
       <button id="btn-register" class="w-64 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700">Registrarse</button>
+      <button id="btn-download-cv" class="w-64 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700">Descargar último CV</button>
     </div>
   </div>
 
@@ -23,6 +24,32 @@
     });
     document.getElementById('btn-register').addEventListener('click', function () {
       window.location.href = '/register';
+    });
+
+    document.getElementById('btn-download-cv').addEventListener('click', async function () {
+      try {
+        const res = await fetch('/api/download_last_cv');
+        if (res.status === 404) {
+          alert('No hay CVs disponibles para descargar.');
+          return;
+        }
+        if (!res.ok) {
+          alert('Error al descargar el CV.');
+          return;
+        }
+        const blob = await res.blob();
+        const filename = res.headers.get('content-disposition')?.split('filename=')[1] || 'ultimo_cv.pdf';
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename.replace(/"/g, '');
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('Error de conexión al descargar el CV.');
+      }
     });
   </script>
 </body>

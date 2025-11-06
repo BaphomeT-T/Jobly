@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI, HTTPException, Request, Form, UploadFile, File
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from pydantic import BaseModel
 import psycopg2
 import psycopg2.extras
@@ -173,5 +173,43 @@ async def register_candidate(
         conn.rollback()
         print("Error register_candidate:", e)
         raise HTTPException(status_code=500, detail="Error interno durante el registro.")
+    finally:
+        conn.close()
+
+@app.get("/api/download_last_cv")
+async def download_last_cv():
+    """
+    Devuelve el último CV (CV_PDF_BIN) almacenado en CANDIDATO como attachment PDF.
+    Busca el registro más reciente con CV no nulo.
+    """
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT CV_PDF_BIN, Nombre_Completo
+                FROM CANDIDATO
+                WHERE CV_PDF_BIN IS NOT NULL
+                ORDER BY ID_Candidato DESC
+                LIMIT 1;
+            """)
+            row = cur.fetchone()
+            if not row or not row[0]:
+                raise HTTPException(status_code=404, detail="No hay CVs disponibles")
+            cv_bytes = row[0]
+            nombre = row[1] or "usuario"
+            filename = f'cv_{nombre}.pdf'.replace(' ', '_')
+            headers = {
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+            return Response(content=cv_bytes.tobytes() if hasattr(cv_bytes, "tobytes") else cv_bytes,
+                            media_type="application/pdf",
+                            headers=headers)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print("Error descargando último CV:", e)
+        raise HTTPException(status_code=500, detail="Error interno al obtener el CV")
     finally:
         conn.close()
