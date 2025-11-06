@@ -10,30 +10,43 @@ load_dotenv()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_db_connection():
-    """Establece y retorna la conexión a la base de datos PostgreSQL, usando DATABASE_URL de Railway."""
+    """Establece y retorna la conexión a la base de datos PostgreSQL, usando DATABASE_PUBLIC_URL de Railway."""
     
-    # CRÍTICO: Usamos DATABASE_URL que Railway garantiza que es la cadena de conexión correcta.
-    database_url = os.getenv("DATABASE_URL")
+    # CRÍTICO: Railway proporciona DATABASE_PUBLIC_URL para conexiones externas
+    # Intentamos primero PUBLIC_URL, luego DATABASE_URL como fallback para desarrollo local
+    database_url = os.getenv("DATABASE_PUBLIC_URL") or os.getenv("DATABASE_URL")
     
     try:
         if not database_url:
-            # Esto solo debería ocurrir en desarrollo local si no hay .env o en Railway si no hay enlace DB.
-            print("Error: DATABASE_URL no está definida. No se puede conectar.")
+            print("❌ Error: DATABASE_PUBLIC_URL o DATABASE_URL no están definidas. No se puede conectar.")
+            print("   Verifica que la base de datos esté linkeada en Railway.")
             return None
+        
+        # Mostrar información de conexión (sin credenciales sensibles)
+        if "railway.app" in database_url:
+            print(f"🔄 Intentando conectar a Railway PostgreSQL...")
+        else:
+            print(f"🔄 Intentando conectar a base de datos local...")
             
-        # Asegurar sslmode=require para conexiones remotas si no está presente (buena práctica)
-        if "sslmode=" not in database_url:
-            if "?" in database_url:
-                database_url = f"{database_url}&sslmode=require"
-            else:
-                database_url = f"{database_url}?sslmode=require"
+        # Asegurar sslmode=require para conexiones remotas si no está presente
+        if "railway.app" in database_url and "sslmode=" not in database_url:
+            separator = "&" if "?" in database_url else "?"
+            database_url = f"{database_url}{separator}sslmode=require"
                 
         # psycopg2 acepta la DSN (Data Source Name) completa
         conn = psycopg2.connect(database_url)
+        print("✅ Conexión a PostgreSQL exitosa")
         return conn
 
+    except psycopg2.OperationalError as e:
+        print(f"❌ Error de conexión a PostgreSQL: {e}")
+        print("   Posibles causas:")
+        print("   1. La base de datos no está linkeada en Railway")
+        print("   2. DATABASE_PUBLIC_URL no está configurada correctamente")
+        print("   3. La base de datos no está disponible")
+        return None
     except Exception as e:
-        print(f"Error conectando a PostgreSQL: {e}")
+        print(f"❌ Error inesperado conectando a PostgreSQL: {e}")
         return None
 
 def hash_password(password: str) -> str:
@@ -43,6 +56,28 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica una contraseña hasheada."""
     return pwd_context.verify(plain_password, hashed_password)
+
+def init_database():
+    """Inicializa las tablas de la base de datos si no existen."""
+    conn = get_db_connection()
+    
+    if not conn:
+        print("⚠️  No se pudo inicializar la base de datos - sin conexión")
+        return False
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute(DDL_SQL)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("✅ Tablas de base de datos inicializadas correctamente")
+        return True
+    except Exception as e:
+        print(f"❌ Error inicializando tablas: {e}")
+        if conn:
+            conn.close()
+        return False
 
 # Código DDL actualizado para reflejar el MER solicitado
 DDL_SQL = """
@@ -83,7 +118,7 @@ CREATE TABLE IF NOT EXISTS EMPRESA (
 -- TABLA ADMINISTRADOR
 CREATE TABLE IF NOT EXISTS ADMINISTRADOR (
     ID_Admin SERIAL PRIMARY KEY,
-    FK_ID_Usuario INT UNIQUE NOT NULL REFERENCES USUARIO(ID_Usuario),
+    FK_ID_Usuario INT UNIQUE NOT NULL REFERENCES USUARIO(ID_Usuario)
 );
 
 -- TABLA VACANTE
