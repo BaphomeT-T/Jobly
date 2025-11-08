@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginBtn = document.querySelector('.btn-login');
     if (loginBtn) {
         loginBtn.addEventListener('click', function() {
-            window.location.href = 'login.html';
+            window.location.href = '/login';
         });
     }
     
@@ -49,14 +49,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const registerEmployerBtn = document.querySelector('.btn-register-employer');
     if (registerEmployerBtn) {
         registerEmployerBtn.addEventListener('click', function() {
-            window.location.href = 'employer-step1.html';
+            window.location.href = '/register/employer/step1';
         });
     }
     
     const registerCandidateBtn = document.querySelector('.btn-register-candidate');
     if (registerCandidateBtn) {
         registerCandidateBtn.addEventListener('click', function() {
-            window.location.href = 'empleado-step1.html';
+            window.location.href = '/register/empleado/step1';
         });
     }
     
