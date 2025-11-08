@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI, HTTPException, Request, Form, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import psycopg2
 import psycopg2.extras
@@ -12,13 +13,23 @@ from .db import get_db_connection, hash_password, verify_password, DDL_SQL
 
 app = FastAPI(title="Jobly Backend API")
 
+# Configuración de CORS para permitir acceso desde cualquier origen
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # ----------------------------------------------------
 # 1. Rutas Estáticas y Servir HTML
 # ----------------------------------------------------
 
 # Monta la carpeta 'static' para servir archivos como CSS o JS.
 # Usamos os.path.join para asegurar compatibilidad de rutas
-app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/static", StaticFiles(directory=static_dir, html=True), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_home():
@@ -82,6 +93,22 @@ async def home_empleados():
 @app.get("/login", response_class=HTMLResponse)
 async def serve_login():
     return _serve_static_html("login.html", "Login")
+
+# Ruta de debug para verificar archivos estáticos
+@app.get("/debug/static-files")
+async def debug_static_files():
+    """Endpoint para verificar que los archivos estáticos existen"""
+    static_path = os.path.join(os.path.dirname(__file__), "static")
+    files = []
+    for root, dirs, filenames in os.walk(static_path):
+        for filename in filenames:
+            rel_path = os.path.relpath(os.path.join(root, filename), static_path)
+            files.append(rel_path)
+    return {
+        "static_directory": static_path,
+        "exists": os.path.exists(static_path),
+        "files": sorted(files)
+    }
 
 # ----------------------------------------------------
 # 2. Funciones de Base de Datos y Inicialización
