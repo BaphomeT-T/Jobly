@@ -110,6 +110,20 @@ async def debug_static_files():
         "files": sorted(files)
     }
 
+# Ruta de debug para verificar todas las rutas registradas
+@app.get("/debug/routes")
+async def debug_routes():
+    """Endpoint para verificar todas las rutas registradas en la aplicación"""
+    routes = []
+    for route in app.routes:
+        if hasattr(route, "path"):
+            routes.append({
+                "path": route.path,
+                "name": route.name if hasattr(route, "name") else None,
+                "methods": list(route.methods) if hasattr(route, "methods") else []
+            })
+    return {"routes": routes}
+
 # ----------------------------------------------------
 # 2. Funciones de Base de Datos y Inicialización
 # ----------------------------------------------------
