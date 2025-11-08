@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <base href="/">
   <title>Registro Candidato - Paso 3 - Jobly</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,8 +14,8 @@
 <body class="bg-white min-h-screen font-[Poppins,sans-serif]">
   <!-- Header -->
   <header class="flex items-center justify-between px-[30px] pt-[24px] pb-[16px] border-b border-[#e5eae8] h-[86px]">
-    <a href="index.html" class="block h-[62px] w-[172px]">
-      <img src="./images/logo-login.png" alt="Jobly Logo" class="h-full w-full object-contain" />
+    <a href="/" class="block h-[62px] w-[172px]">
+      <img src="/static/images/logo-login.png" alt="Jobly Logo" class="h-full w-full object-contain" />
     </a>
     <div class="flex items-center gap-4">
       <div class="h-6 w-px bg-[#e5eae8]"></div>
@@ -25,25 +26,25 @@
   <section class="flex gap-[64px] items-end justify-center px-[108px] pt-[16px] pb-0 border-b border-[#e5eae8] relative">
     <div class="flex flex-col gap-[16px] items-center justify-center">
       <p class="text-[#606261] text-[20px] font-medium text-right"> </p>
-      <img src="./images/line-divider.png" alt="Subheader Icon" class="h-0 w-full" />
+      <img src="/static/images/line-divider.png" alt="Subheader Icon" class="h-0 w-full" />
     </div>
     <div class="absolute bottom-0 left-[78px] top-0 w-[127px] opacity-10 pointer-events-none">
-      <img src="./images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-5.51%] top-[-71.43%] w-[105.51%]" />
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-5.51%] top-[-71.43%] w-[105.51%]" />
     </div>
     <div class="absolute bottom-0 left-[198px] top-0 w-[84px] opacity-10 pointer-events-none">
-      <img src="./images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-7.14%] top-[-71.43%] w-[159.52%]" />
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-7.14%] top-[-71.43%] w-[159.52%]" />
     </div>
     <div class="absolute bottom-0 right-[129px] top-0 w-[58px] opacity-10 pointer-events-none">
-      <img src="./images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-58.62%] top-[-71.43%] w-[231.03%]" />
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-58.62%] top-[-71.43%] w-[231.03%]" />
     </div>
     <div class="absolute bottom-0 right-0 top-0 w-[127px] opacity-10 pointer-events-none">
-      <img src="./images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-5.51%] top-[-71.43%] w-[105.51%]" />
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-5.51%] top-[-71.43%] w-[105.51%]" />
     </div>
   </section>
 
   <!-- Decorative people bottom-right -->
   <div class="fixed right-[108px] bottom-0 w-[520px] max-w-[45vw] pointer-events-none z-0">
-    <img src="./images/employer-step1-people.png" alt="Decoración" class="w-full h-auto" />
+    <img src="/static/images/employer-step1-people.png" alt="Decoración" class="w-full h-auto" />
   </div>
 
   <!-- Main content -->
@@ -52,14 +53,14 @@
       <!-- Top row: back + title + save/exit -->
       <div class="flex items-center justify-between mb-8">
         <div class="flex items-center gap-4">
-          <button onclick='window.location.href="empleado-step2.html"' class="w-6 h-6 flex items-center justify-center" aria-label="Volver">
-            <img src="./images/arrow-back.png" alt="Volver" class="w-full h-full" />
+          <button onclick='window.location.href="/register/empleado/step2"' class="w-6 h-6 flex items-center justify-center" aria-label="Volver">
+            <img src="/static/images/arrow-back.png" alt="Volver" class="w-full h-full" />
           </button>
           <h1 class="text-[32px] font-semibold text-black leading-[1.2] capitalize">Foto De Perfil</h1>
         </div>
         <button 
         type="button" 
-        onclick="window.location.href='index.html'" 
+        onclick="window.location.href='/'" 
         class="text-[16px] font-semibold tracking-[0.48px] text-[#141514]">
         Save And Exit
         </button>
@@ -108,7 +109,7 @@
       const saved = localStorage.getItem('candidateRegistration');
       if (!saved) {
         alert('No hay datos de registro previos. Por favor completa los pasos anteriores.');
-        window.location.href = 'empleado-step1.html';
+        window.location.href = '/register/empleado/step1';
         return;
       }
       
@@ -178,7 +179,7 @@
         localStorage.removeItem('candidateRegistration');
         localStorage.removeItem('candidateCV');
         alert('¡Registro completado exitosamente! Ahora puedes iniciar sesión.');
-        window.location.href = 'login.html';
+        window.location.href = '/login';
         
       } catch(error) {
         console.error('Error completo:', error);
