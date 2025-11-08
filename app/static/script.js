@@ -40,7 +40,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Login button functionality
     const loginBtn = document.querySelector('.btn-login');
     if (loginBtn) {
-        loginBtn.addEventListener('click', function() {
+        loginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Login button clicked! Redirecting to /login');
             window.location.href = '/login';
         });
     }
