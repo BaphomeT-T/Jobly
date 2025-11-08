@@ -1,56 +1,400 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Jobly</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobly - Find Your Dream Job</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
-<body class="min-h-screen flex items-center justify-center bg-gray-100">
-  <div class="text-center space-y-6">
-    <h1 class="text-3xl font-bold">Jobly</h1>
-    <p class="text-gray-600">Selecciona una opción</p>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <img src="./images/logo.png" alt="Jobly Logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27172%27 height=%2762%27%3E%3Crect width=%27172%27 height=%2762%27 fill=%27%23ccc%27/%3E%3C/svg%3E'">
+            </div>
+            <nav class="header-nav">
+                <div class="nav-items">
+                    <!-- Navigation items would go here -->
+                </div>
+            </nav>
+            <div class="header-actions">
+                <div class="header-icons">
+                    <button class="icon-btn" aria-label="Help">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="#141514" stroke-width="1.5"/>
+                            <path d="M9.09 9C9.325 8.33 9.835 7.81 10.5 7.57C11.165 7.33 11.903 7.39 12.516 7.74C13.129 8.09 13.563 8.69 13.72 9.38C13.877 10.07 13.745 10.79 13.35 11.38C12.955 11.97 12.33 12.38 11.62 12.51V13.5" stroke="#141514" stroke-width="1.5" stroke-linecap="round"/>
+                            <circle cx="12" cy="16.5" r="0.75" fill="#141514"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" aria-label="Messages">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M22 6L12 13L2 6" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" aria-label="Notifications">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" aria-label="Profile">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="7" r="4" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="divider"></div>
+                <div class="header-buttons">
+                    <button class="btn-register btn-register-employer">
+                        <span>Registrarse como empresa</span>
+                    </button>
+                    <a class="btn-register btn-register-candidate" >
+                        <span>Registrarse como candidato</span>
+                    </a>
+                    <button class="btn-login">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 3H4C2.9 3 2 3.9 2 5V19C2 20.1 2.9 21 4 21H15C16.1 21 17 20.1 17 19V15H15V19H4V5H15V9H17V5C17 3.9 16.1 3 15 3ZM14 12V9H10V7H14V4L19 8L14 12Z" fill="white"/>
+                        </svg>
+                        <span>Iniciar sesion</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    <div class="space-y-4">
-      <button id="btn-login" class="w-64 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700">Iniciar Sesión</button>
-      <button id="btn-register" class="w-64 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700">Registrarse</button>
-      <button id="btn-download-cv" class="w-64 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700">Descargar último CV</button>
+    <!-- Subheader Navigation -->
+    <nav class="subheader">
+        <div class="subheader-container">
+            <div class="subheader-item">
+                <span class="subheader-text"></span>
+                <div class="subheader-line"></div>
+            </div>
+            <div class="subheader-item">
+                <span class="subheader-text"></span>
+                <div class="subheader-line"></div>
+            </div>
+            <div class="subheader-item">
+                <span class="subheader-text"></span>
+                <div class="subheader-line"></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Banner -->
+    <div class="banner-section">
+        <img src="./images/banner-01-6bf99f.png" alt="Jobly Banner" class="banner-image">
+        <div class="banner-content">
+            <h1 class="banner-title">Exclusive offers</h1>
+            <div class="banner-navigation">
+                <button class="banner-nav-btn banner-nav-btn-left" aria-label="Previous">
+                    <svg width="10" height="8.75" viewBox="0 0 10 8.75" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 0L0 4.375L5 8.75M10 4.375H0" stroke="#B8BDBB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button class="banner-nav-btn banner-nav-btn-right" aria-label="Next">
+                    <svg width="10" height="8.75" viewBox="0 0 10 8.75" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 0L10 4.375L5 8.75M0 4.375H10" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    document.getElementById('btn-login').addEventListener('click', function () {
-      window.location.href = '/login';
-    });
-    document.getElementById('btn-register').addEventListener('click', function () {
-      window.location.href = '/register';
-    });
+    <!-- Exclusive Offers Section -->
+    <section class="exclusive-offers">
+        <div class="offers-container">
+            <div class="job-cards-grid">
+                <div class="job-cards-row">
+                <!-- Job Card 1 - META Company -->
+                <div class="job-card">
+                    <div class="job-card-header">
+                        <div class="company-info">
+                            <div class="company-logo">
+                                <img src="./images/company-meta.png" alt="META Company" onerror="this.style.display='none'">
+                            </div>
+                            <span class="company-name">META Company</span>
+                        </div>
+                        <button class="bookmark-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 21L12 16L5 21V5C5 3.9 5.9 3 7 3H17C18.1 3 19 3.9 19 5V21Z" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="job-card-body">
+                        <div class="job-details">
+                            <h3 class="job-title">Product Design</h3>
+                            <div class="job-meta">
+                                <span class="job-location">Porto,</span>
+                                <span class="job-country">Portugal</span>
+                                <span class="job-type">(On site)</span>
+                            </div>
+                        </div>
+                        <div class="job-tags">
+                            <div class="tag-group">
+                                <div class="tag tag-outline">
+                                    <span>Easy Apply</span>
+                                </div>
+                                <div class="tag tag-filled">
+                                    <span>Multiple Candidate</span>
+                                </div>
+                            </div>
+                            <span class="job-time">1d</span>
+                        </div>
+                    </div>
+                </div>
 
-    document.getElementById('btn-download-cv').addEventListener('click', async function () {
-      try {
-        const res = await fetch('/api/download_last_cv');
-        if (res.status === 404) {
-          alert('No hay CVs disponibles para descargar.');
-          return;
-        }
-        if (!res.ok) {
-          alert('Error al descargar el CV.');
-          return;
-        }
-        const blob = await res.blob();
-        const filename = res.headers.get('content-disposition')?.split('filename=')[1] || 'ultimo_cv.pdf';
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename.replace(/"/g, '');
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-      } catch (err) {
-        alert('Error de conexión al descargar el CV.');
-      }
-    });
-  </script>
+                <!-- Job Card 2 - NAJMA company (Hover State) -->
+                <div class="job-card job-card-hover">
+                    <div class="job-card-header">
+                        <div class="company-info">
+                            <div class="company-logo">
+                                <img src="./images/company-najma.png" alt="NAJMA company" onerror="this.style.display='none'">
+                            </div>
+                            <span class="company-name">NAJMA company</span>
+                        </div>
+                        <button class="bookmark-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 21L12 16L5 21V5C5 3.9 5.9 3 7 3H17C18.1 3 19 3.9 19 5V21Z" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="job-card-body">
+                        <div class="job-details">
+                            <h3 class="job-title">UI/UX Designer</h3>
+                            <div class="job-meta">
+                                <span class="job-location job-location-special">Porto,</span>
+                                <span class="job-country">Portugal</span>
+                                <span class="job-type">(on Site)</span>
+                            </div>
+                        </div>
+                        <div class="job-tags">
+                            <div class="tag-group">
+                                <div class="tag tag-outline">
+                                    <span>Easy Apply</span>
+                                </div>
+                                <div class="tag tag-filled">
+                                    <span>Multiple Candidate</span>
+                                </div>
+                            </div>
+                            <span class="job-time">2d</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Card 3 - MOHI company (Selected State) -->
+                <div class="job-card job-card-selected">
+                    <div class="job-card-header">
+                        <div class="company-info">
+                            <div class="company-logo">
+                                <img src="./images/company-fatima.png" alt="MOHI company" onerror="this.style.display='none'">
+                            </div>
+                            <span class="company-name">MOHI company</span>
+                        </div>
+                        <button class="bookmark-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 21L12 16L5 21V5C5 3.9 5.9 3 7 3H17C18.1 3 19 3.9 19 5V21Z" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="job-card-body">
+                        <div class="job-details">
+                            <h3 class="job-title">Game Designer</h3>
+                            <div class="job-meta">
+                                <span class="job-location">Rome,</span>
+                                <span class="job-country">Italy</span>
+                                <span class="job-type">(on Site)</span>
+                            </div>
+                        </div>
+                        <div class="job-tags">
+                            <div class="tag-group">
+                                <div class="tag tag-filled">
+                                    <span>Multiple Candidate</span>
+                                </div>
+                            </div>
+                            <span class="job-time">3d</span>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div class="job-cards-row">
+                <!-- Job Card 4 - FATIMA company -->
+                <div class="job-card">
+                    <div class="job-card-header">
+                        <div class="company-info">
+                            <div class="company-logo">
+                                <img src="./images/company-fatima.png" alt="FATIMA company" onerror="this.style.display='none'">
+                            </div>
+                            <span class="company-name">FATIMA company</span>
+                        </div>
+                        <button class="bookmark-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 21L12 16L5 21V5C5 3.9 5.9 3 7 3H17C18.1 3 19 3.9 19 5V21Z" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="job-card-body">
+                        <div class="job-details">
+                            <h3 class="job-title">Motion Designer</h3>
+                            <div class="job-meta">
+                                <span class="job-type job-type-remote">Remote</span>
+                            </div>
+                        </div>
+                        <div class="job-tags">
+                            <div class="tag-group">
+                                <div class="tag tag-filled">
+                                    <span>Multiple Candidate</span>
+                                </div>
+                            </div>
+                            <span class="job-time">6d</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Card 4 - ELI company -->
+                <div class="job-card">
+                    <div class="job-card-header">
+                        <div class="company-info">
+                            <div class="company-logo">
+                                <img src="./images/company-eli.png" alt="ELI company" onerror="this.style.display='none'">
+                            </div>
+                            <span class="company-name">ELI company</span>
+                        </div>
+                        <button class="bookmark-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 21L12 16L5 21V5C5 3.9 5.9 3 7 3H17C18.1 3 19 3.9 19 5V21Z" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="job-card-body">
+                        <div class="job-details">
+                            <h3 class="job-title">Graphic Designer</h3>
+                            <div class="job-meta">
+                                <span class="job-country">Germany</span>
+                                <span class="job-type">(Hybrid)</span>
+                            </div>
+                        </div>
+                        <div class="job-tags">
+                            <div class="tag-group">
+                                <div class="tag tag-outline">
+                                    <span>Easy Apply</span>
+                                </div>
+                            </div>
+                            <span class="job-time">7d</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Card 5 - MITRA company -->
+                <div class="job-card">
+                    <div class="job-card-header">
+                        <div class="company-info">
+                            <div class="company-logo">
+                                <img src="./images/company-mitra.png" alt="MITRA company" onerror="this.style.display='none'">
+                            </div>
+                            <span class="company-name">MITRA company</span>
+                        </div>
+                        <button class="bookmark-btn">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M19 21L12 16L5 21V5C5 3.9 5.9 3 7 3H17C18.1 3 19 3.9 19 5V21Z" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="job-card-body">
+                        <div class="job-details">
+                            <h3 class="job-title">Service Designer</h3>
+                            <div class="job-meta">
+                                <span class="job-location">London,</span>
+                                <span class="job-type">(on Site)</span>
+                            </div>
+                        </div>
+                        <div class="job-tags">
+                            <div class="tag-group">
+                                <div class="tag tag-filled">
+                                    <span>Multiple Candidate</span>
+                                </div>
+                            </div>
+                            <span class="job-time">1d</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-background">
+            <img src="./images/hero-background-ca2375.png" alt="Hero Background" class="hero-bg-image" onerror="this.style.display='none'">
+            <div class="hero-overlay"></div>
+        </div>
+        <div class="hero-content">
+            <h2 class="hero-title">Have you graduated or changed your career?</h2>
+            <div class="hero-actions">
+                <div class="hero-action-item">
+                    <div class="hero-action-icon">
+                        <svg width="104" height="104" viewBox="0 0 104 104" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="52" cy="52" r="50" stroke="#FFFFFF" stroke-width="2"/>
+                            <path d="M52 28L52 52L36 68" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <span class="hero-action-text">Enter Jobior campion</span>
+                </div>
+                <div class="hero-action-item">
+                    <div class="hero-action-icon">
+                        <svg width="104" height="104" viewBox="0 0 104 104" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="52" cy="52" r="50" stroke="#FBFCFB" stroke-width="2"/>
+                            <path d="M40 52L48 60L64 44" stroke="#FBFCFB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <span class="hero-action-text">Get resume assessment</span>
+                </div>
+                <div class="hero-action-item">
+                    <div class="hero-action-icon">
+                        <svg width="104" height="104" viewBox="0 0 104 104" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="52" cy="52" r="50" stroke="#FFFFFF" stroke-width="2"/>
+                            <circle cx="52" cy="52" r="20" fill="#FFFFFF"/>
+                        </svg>
+                    </div>
+                    <span class="hero-action-text">Search suitable recruiter</span>
+                </div>
+                <div class="hero-action-item">
+                    <div class="hero-action-icon">
+                        <svg width="104" height="104" viewBox="0 0 104 104" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="52" cy="52" r="50" stroke="#FFFFFF" stroke-width="2"/>
+                            <path d="M52 32L52 52L72 72" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <span class="hero-action-text">Search Salaries by major</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-language">
+                    <div class="language-selector">
+                        <div class="language-flag">
+                            <svg width="30" height="25" viewBox="0 0 30 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            </svg>
+                        </div>
+                        <span class="language-text">Ecuador (Español)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-line"></div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
+
