@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginBtn = document.querySelector('.btn-login');
     if (loginBtn) {
         loginBtn.addEventListener('click', function() {
-            window.location.href = '/static/login.html';
+            window.location.href = '/login';
         });
     }
     
