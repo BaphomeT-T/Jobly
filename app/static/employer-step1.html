@@ -131,7 +131,6 @@
       if (saved) {
         try {
           const data = JSON.parse(saved);
-          // Alineado a empleado: guardamos plano (no step1/step2 anidado)
           document.getElementById('nombreEmpresa').value = data.nombreEmpresa || '';
           document.getElementById('ruc').value = data.ruc || '';
           document.getElementById('email').value = data.email || '';
@@ -149,29 +148,41 @@
       const form = document.getElementById('employerStep1');
       if(!form.checkValidity()){ form.reportValidity(); return; }
 
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const ruc = document.getElementById('ruc').value.trim();
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const rucInput = document.getElementById('ruc');
 
-      // Client-side validations
+      // clear previous custom validity
+      emailInput.setCustomValidity('');
+      passwordInput.setCustomValidity('');
+      rucInput.setCustomValidity('');
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const ruc = rucInput.value.trim();
+
+      // Client-side validations using native UI
       if (!isValidEmail(email)) {
-        alert('Email inválido.');
+        emailInput.setCustomValidity('Email inválido');
+        emailInput.reportValidity();
         return;
       }
       if (!isValidPassword(password)) {
-        alert('La contraseña debe tener mínimo 8 caracteres, al menos una letra, una mayúscula y un número.');
+        passwordInput.setCustomValidity('La contraseña debe tener mínimo 8 caracteres, al menos una letra, una mayúscula y un número.');
+        passwordInput.reportValidity();
         return;
       }
       if (ruc && !isValidRucEc(ruc)) {
-        alert('RUC inválido. Debe tener 13 dígitos y comenzar con código provincial válido (01-24).');
+        rucInput.setCustomValidity('RUC inválido. Debe tener 13 dígitos y comenzar con código provincial válido (01-24).');
+        rucInput.reportValidity();
         return;
       }
 
       const data = {
         nombreEmpresa: document.getElementById('nombreEmpresa').value,
-        ruc: document.getElementById('ruc').value,
-        email: document.getElementById('email').value,
-        password: document.getElementById('password').value
+        ruc: ruc,
+        email: email,
+        password: password
       };
       localStorage.setItem('employerRegistration', JSON.stringify(data));
 

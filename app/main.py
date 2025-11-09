@@ -7,6 +7,7 @@ from pydantic import BaseModel
 import psycopg2
 import psycopg2.extras
 import re
+
 # **********************************************
 # IMPORTACIÓN CORREGIDA: Usamos "." para la importación relativa
 from .db import get_db_connection, hash_password, verify_password, identify_hash_scheme, verify_legacy_password, is_plain_password, DDL_SQL 
@@ -589,3 +590,28 @@ async def home_vacantes():
 @app.get("/home-empresa", response_class=HTMLResponse)
 async def home_empresa():
     return _serve_static_html("home-empresa.html", "Home Empresa")
+
+
+# ===== Validadores (necesarios para endpoints) =====
+EMAIL_REGEX = re.compile(r"^[\w\.-]+@[\w\.-]+\.\w{2,}$")
+PASSWORD_REGEX = re.compile(r"^(?=.*[A-Z])(?=.*[a-zA-Z])(?=.*\d).{8,}$")
+# RUC Ecuador (simplificado): 13 dígitos, provincia 01-24
+RUC_EC_REGEX = re.compile(r"^(?:0[1-9]|1[0-9]|2[0-4])\d{11}$")
+
+def is_valid_email(email: str) -> bool:
+    try:
+        return bool(email and EMAIL_REGEX.match(email))
+    except Exception:
+        return False
+
+def is_valid_password(pw: str) -> bool:
+    try:
+        return bool(pw and PASSWORD_REGEX.match(pw))
+    except Exception:
+        return False
+
+def is_valid_ruc_ec(ruc: str) -> bool:
+    try:
+        return bool(ruc and RUC_EC_REGEX.match(ruc))
+    except Exception:
+        return False
