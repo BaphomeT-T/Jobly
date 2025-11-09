@@ -160,6 +160,9 @@
           localStorage.setItem('authRole', data.rol || '');
         } catch {}
 
+          // Persist minimal user info (still used by some pages for display) but backend now uses signed cookie session
+          localStorage.setItem('user', JSON.stringify({ email: data.email, userId: data.user_id, rol: data.rol }));
+
         messageDiv.className = 'mt-4 text-sm text-green-600';
         messageDiv.textContent = 'Inicio de sesión exitoso. Redirigiendo...';
 

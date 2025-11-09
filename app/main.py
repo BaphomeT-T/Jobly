@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException, Request, Form, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
 import psycopg2
 import psycopg2.extras
@@ -22,6 +23,13 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+# Sesiones firmadas (HttpOnly cookie)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SESSION_SECRET", "dev-session-secret-change"),
+    same_site="lax"
 )
 
 # ----------------------------------------------------
@@ -113,11 +121,19 @@ async def ver_vacantes():
 
 # API: Obtener vacantes de una empresa por email
 @app.get("/api/vacantes/empresa")
-async def get_vacantes_empresa(email: str):
+async def get_vacantes_empresa(request: Request, email: str | None = None):
     """
     Obtiene todas las vacantes de una empresa identificada por el email del usuario.
     Incluye el conteo de postulaciones por vacante.
     """
+    # Priorizar email desde la sesión; fallback temporal al query param
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    session_email = (session_user or {}).get("email") if isinstance(session_user, dict) else None
+    effective_email = session_email or email
+
+    if not effective_email:
+        raise HTTPException(status_code=401, detail="No autenticado")
+
     conn = get_db_connection()
     if conn is None:
         raise HTTPException(status_code=500, detail="Error de conexión a la DB")
@@ -131,7 +147,7 @@ async def get_vacantes_empresa(email: str):
                 JOIN USUARIO u ON e.FK_ID_Usuario = u.ID_Usuario
                 WHERE u.Email = %s
                 LIMIT 1;
-            """, (email,))
+            """, (effective_email,))
             empresa = cur.fetchone()
             
             if not empresa:
@@ -180,6 +196,22 @@ async def get_vacantes_empresa(email: str):
         raise HTTPException(status_code=500, detail="Error interno obteniendo vacantes")
     finally:
         conn.close()
+
+@app.get("/api/me")
+async def api_me(request: Request):
+    user = request.session.get("user") if hasattr(request, "session") else None
+    if not user:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    return user
+
+@app.post("/api/logout")
+async def api_logout(request: Request):
+    try:
+        if hasattr(request, "session"):
+            request.session.clear()
+    except Exception as e:
+        print("Error limpiando sesión:", e)
+    return {"message": "Sesión cerrada"}
 
 # Ruta para actividades (empresa)
 @app.get("/actividades", response_class=HTMLResponse)
@@ -307,7 +339,7 @@ from fastapi import Response
 
 # --- Endpoint para Login ---
 @app.post("/api/login/")
-async def login_user(email: str = Form(...), password: str = Form(...)):
+async def login_user(request: Request, email: str = Form(...), password: str = Form(...)):
     """
     Valida las credenciales y maneja migración de hashes legacy o texto plano.
     """
@@ -373,6 +405,16 @@ async def login_user(email: str = Form(...), password: str = Form(...)):
             
             rol = user["rol"]
             redirect = "/home-empresa" if rol == "Empresa" else "/home-empleados"
+
+            # Guardar la información mínima en sesión (cookie firmada)
+            try:
+                request.session["user"] = {
+                    "id_usuario": int(user["id_usuario"]),
+                    "email": user["email"],
+                    "rol": rol
+                }
+            except Exception as e:
+                print("No se pudo almacenar sesión:", e)
 
             return {
                 "message": "Inicio de sesión exitoso",
