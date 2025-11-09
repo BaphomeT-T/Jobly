@@ -56,6 +56,14 @@
       return hasUpper && hasLower && hasDigit;
     }
 
+    // Limpiar mensajes personalizados al escribir
+    document.addEventListener('DOMContentLoaded', () => {
+      const emailInput = form.querySelector('input[name="email"]');
+      const passwordInput = form.querySelector('input[name="password"]');
+      if (emailInput) emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
+      if (passwordInput) passwordInput.addEventListener('input', () => passwordInput.setCustomValidity(''));
+    });
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       msg.textContent = 'Enviando...';

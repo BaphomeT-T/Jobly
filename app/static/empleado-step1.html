@@ -125,6 +125,11 @@
                     document.getElementById('password').value = data.password || '';
                 } catch(e){ /* ignore parse errors */ }
             }
+            // limpiar customValidity al escribir
+            const emailInput = document.getElementById('email');
+            const pwInput = document.getElementById('password');
+            if (emailInput) emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
+            if (pwInput) pwInput.addEventListener('input', () => pwInput.setCustomValidity(''));
         });
         function toggleCandidatePassword(){
             const input = document.getElementById('password');

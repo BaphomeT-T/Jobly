@@ -129,6 +129,16 @@
         return /^(?:0[1-9]|1[0-9]|2[0-4])\d{11}$/.test(ruc);
       }
 
+    // Limpiar customValidity mientras el usuario escribe
+    window.addEventListener('DOMContentLoaded', () => {
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const rucInput = document.getElementById('ruc');
+      if (emailInput) emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
+      if (passwordInput) passwordInput.addEventListener('input', () => passwordInput.setCustomValidity(''));
+      if (rucInput) rucInput.addEventListener('input', () => rucInput.setCustomValidity(''));
+    });
+
     // Cargar lo guardado
     window.addEventListener('DOMContentLoaded', () => {
       const saved = localStorage.getItem('employerRegistration');
