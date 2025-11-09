@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import psycopg2
 import psycopg2.extras
+import psycopg2.errors
 # **********************************************
 # IMPORTACIÓN CORREGIDA: Usamos "." para la importación relativa
 from .db import get_db_connection, hash_password, verify_password, DDL_SQL 
@@ -400,3 +401,80 @@ async def home_vacantes():
 @app.get("/home-empresa", response_class=HTMLResponse)
 async def home_empresa():
     return _serve_static_html("home-empresa.html", "Home Empresa")
+
+# Nuevo / corregido endpoint para registrar empresa
+@app.post("/api/register_company/")
+async def register_company(
+    email: str = Form(...),
+    password: str = Form(...),
+    company_name: str = Form(...),
+    ruc: str = Form(...),
+    categoria: str = Form(None),
+    logo: UploadFile = File(None)
+):
+    """
+    Registra una empresa: crea USUARIO (Rol='Empresa') y EMPRESA con logo en BYTEA.
+    """
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+
+    try:
+        logo_bytes = await logo.read() if logo else None
+        hashed_password = hash_password(password)
+
+        with conn.cursor() as cur:
+            # Crear usuario
+            cur.execute(
+                """
+                INSERT INTO USUARIO (Email, Password, Rol)
+                VALUES (%s, %s, %s)
+                RETURNING ID_Usuario;
+                """,
+                (email, hashed_password, 'Empresa')
+            )
+            user_id = cur.fetchone()[0]
+
+            # Insertar empresa vinculada al usuario creado
+            cur.execute(
+                """
+                INSERT INTO EMPRESA (FK_ID_Usuario, Foto_Logo_BIN, Nombre_Empresa, RUC, Categoria, Descripcion)
+                VALUES (%s, %s, %s, %s, %s, %s);
+                """,
+                (
+                    user_id,
+                    psycopg2.Binary(logo_bytes) if logo_bytes else None,
+                    company_name,
+                    ruc,
+                    categoria,
+                    None
+                )
+            )
+
+        # Commit fuera del bloque cursor para asegurar persistencia
+        conn.commit()
+        return {"message": "Empresa registrada", "user_id": user_id}
+
+    except psycopg2.errors.UniqueViolation as e:
+        # Deshacer y devolver mensaje más específico si es posible
+        conn.rollback()
+        detail = ""
+        try:
+            detail = (e.diag.message_detail or "").lower()
+        except Exception:
+            detail = str(e).lower()
+        if "ruc" in detail or "ruc" in str(e).lower():
+            msg = "RUC ya registrado."
+        elif "email" in detail or "email" in str(e).lower():
+            msg = "Email ya registrado."
+        else:
+            msg = "Email o RUC ya registrado."
+        raise HTTPException(status_code=400, detail=msg)
+
+    except Exception as e:
+        conn.rollback()
+        print("Error register_company:", e)
+        raise HTTPException(status_code=500, detail="Error interno durante el registro de empresa.")
+
+    finally:
+        conn.close()
