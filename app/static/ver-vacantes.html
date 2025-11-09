@@ -108,8 +108,8 @@
           class="text-[18px] font-medium text-[#a2a6a4] outline-none border-none bg-transparent flex-1"
         />
       </div>
-      <!-- Filter Icon -->
-      <svg class="w-6 h-6 cursor-pointer" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Filter Icon (add id for JS hook, no visual change) -->
+      <svg id="filterIcon" class="w-6 h-6 cursor-pointer" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M3 7h6M13 7h8M3 12h2M9 12h12M3 17h12M19 17h2" stroke="#141514" stroke-width="1.5" stroke-linecap="round"/>
         <circle cx="9.5" cy="7" r="2.5" fill="white" stroke="#141514" stroke-width="1.5"/>
         <circle cx="6.5" cy="12" r="2.5" fill="white" stroke="#141514" stroke-width="1.5"/>
@@ -146,6 +146,46 @@
       </div>
     </div>
   </main>
+
+  <!-- Filters modal (hidden by default) -->
+  <div id="filterModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
+    <div class="bg-white rounded-lg p-6 w-[720px] max-w-[95%]">
+      <h2 class="text-lg font-semibold mb-4">Filtros de Vacantes</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Fecha desde</label>
+          <input id="dateFrom" type="date" class="w-full p-2 border rounded" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Fecha hasta</label>
+          <input id="dateTo" type="date" class="w-full p-2 border rounded" />
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium mb-2">Estado</label>
+          <div class="flex gap-4">
+            <label><input type="checkbox" class="estadoChk" value="Borrador" /> Borrador</label>
+            <label><input type="checkbox" class="estadoChk" value="Publicada" /> Publicada</label>
+            <label><input type="checkbox" class="estadoChk" value="Cerrada" /> Cerrada</label>
+          </div>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium mb-2">Modalidad</label>
+          <div class="flex gap-4 flex-wrap">
+            <label><input type="checkbox" class="modalidadChk" value="Presencial" /> Presencial</label>
+            <label><input type="checkbox" class="modalidadChk" value="Remoto" /> Remoto</label>
+            <label><input type="checkbox" class="modalidadChk" value="Híbrido" /> Híbrido</label>
+            <label><input type="checkbox" class="modalidadChk" value="Virtual" /> Virtual</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button id="clearFilters" class="px-4 py-2 border rounded">Limpiar</button>
+        <button id="applyFilters" class="px-4 py-2 bg-[#f23e8e] text-white rounded">Aplicar</button>
+        <button id="closeFilters" class="px-4 py-2 border rounded">Cerrar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Footer -->
   <footer class="border-t border-[#e5eae8] px-[108px] py-[24px] flex flex-col gap-[48px] items-center h-[235px] bg-white">
@@ -274,6 +314,62 @@
         row.style.display = text.includes(searchTerm) ? 'flex' : 'none';
       });
     });
+
+    // Filtering logic for ver-vacantes
+    (function(){
+      const filterIcon = document.getElementById('filterIcon');
+      const filterModal = document.getElementById('filterModal');
+      const closeFilters = document.getElementById('closeFilters');
+      const applyFilters = document.getElementById('applyFilters');
+      const clearFilters = document.getElementById('clearFilters');
+      const dateFromEl = document.getElementById('dateFrom');
+      const dateToEl = document.getElementById('dateTo');
+      let allVacantes = []; // cached
+
+      function openModal(){ if(!filterModal) return; filterModal.classList.remove('hidden'); filterModal.classList.add('flex'); }
+      function closeModal(){ if(!filterModal) return; filterModal.classList.add('hidden'); filterModal.classList.remove('flex'); }
+
+      filterIcon?.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
+      closeFilters?.addEventListener('click', closeModal);
+
+      clearFilters?.addEventListener('click', () => {
+        dateFromEl.value = ''; dateToEl.value = '';
+        document.querySelectorAll('.estadoChk').forEach(c=>c.checked=false);
+        document.querySelectorAll('.modalidadChk').forEach(c=>c.checked=false);
+        renderVacantes(allVacantes);
+      });
+
+      applyFilters?.addEventListener('click', () => {
+        const from = dateFromEl.value;
+        const to = dateToEl.value;
+        const estados = Array.from(document.querySelectorAll('.estadoChk:checked')).map(i=>i.value);
+        const modalidades = Array.from(document.querySelectorAll('.modalidadChk:checked')).map(i=>i.value);
+
+        const filtered = allVacantes.filter(v => {
+          if (from) {
+            const fv = v.fecha_creacion ? new Date(v.fecha_creacion) : null;
+            if (!fv || fv < new Date(from + 'T00:00:00')) return false;
+          }
+          if (to) {
+            const fv = v.fecha_creacion ? new Date(v.fecha_creacion) : null;
+            if (!fv || fv > new Date(to + 'T23:59:59')) return false;
+          }
+          if (estados.length && !estados.includes(v.estado)) return false;
+          if (modalidades.length) {
+            const m = (v.modalidad || '').toLowerCase();
+            const ok = modalidades.some(sel => m.includes(sel.toLowerCase()));
+            if (!ok) return false;
+          }
+          return true;
+        });
+
+        renderVacantes(filtered);
+        closeModal();
+      });
+
+      // expose helper to set allVacantes after load
+      window.__setAllVacantes = function(arr){ allVacantes = Array.isArray(arr)?arr:[]; };
+    })();
 
     // Cargar vacantes al cargar la página
     document.addEventListener('DOMContentLoaded', loadVacantes);
