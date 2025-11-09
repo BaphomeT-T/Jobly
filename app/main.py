@@ -414,6 +414,7 @@ async def register_company(
 ):
     """
     Registra una empresa: crea USUARIO (Rol='Empresa') y EMPRESA con logo en BYTEA.
+    Operaciones en una transacción; commit solo si todo OK.
     """
     conn = get_db_connection()
     if conn is None:
@@ -423,41 +424,41 @@ async def register_company(
         logo_bytes = await logo.read() if logo else None
         hashed_password = hash_password(password)
 
-        with conn.cursor() as cur:
-            # Crear usuario
-            cur.execute(
-                """
-                INSERT INTO USUARIO (Email, Password, Rol)
-                VALUES (%s, %s, %s)
-                RETURNING ID_Usuario;
-                """,
-                (email, hashed_password, 'Empresa')
-            )
-            user_id = cur.fetchone()[0]
-
-            # Insertar empresa vinculada al usuario creado
-            cur.execute(
-                """
-                INSERT INTO EMPRESA (FK_ID_Usuario, Foto_Logo_BIN, Nombre_Empresa, RUC, Categoria, Descripcion)
-                VALUES (%s, %s, %s, %s, %s, %s);
-                """,
-                (
-                    user_id,
-                    psycopg2.Binary(logo_bytes) if logo_bytes else None,
-                    company_name,
-                    ruc,
-                    categoria,
-                    None
+        # usar el contexto de conexión para commit/rollback automáticos
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO USUARIO (Email, Password, Rol)
+                    VALUES (%s, %s, %s)
+                    RETURNING ID_Usuario;
+                    """,
+                    (email, hashed_password, 'Empresa')
                 )
-            )
+                row = cur.fetchone()
+                if not row:
+                    raise Exception("No se obtuvo ID_Usuario tras INSERT.")
+                user_id = row[0]
 
-        # Commit fuera del bloque cursor para asegurar persistencia
-        conn.commit()
+                cur.execute(
+                    """
+                    INSERT INTO EMPRESA (FK_ID_Usuario, Foto_Logo_BIN, Nombre_Empresa, RUC, Categoria, Descripcion)
+                    VALUES (%s, %s, %s, %s, %s, %s);
+                    """,
+                    (
+                        user_id,
+                        psycopg2.Binary(logo_bytes) if logo_bytes else None,
+                        company_name,
+                        ruc,
+                        categoria,
+                        None
+                    )
+                )
+        # si llegamos aquí, la transacción fue confirmada
         return {"message": "Empresa registrada", "user_id": user_id}
 
-    except psycopg2.errors.UniqueViolation as e:
-        # Deshacer y devolver mensaje más específico si es posible
-        conn.rollback()
+    except psycopg2.IntegrityError as e:
+        # la transacción ya habrá sido revertida por el contexto 'with conn'
         detail = ""
         try:
             detail = (e.diag.message_detail or "").lower()
@@ -472,9 +473,12 @@ async def register_company(
         raise HTTPException(status_code=400, detail=msg)
 
     except Exception as e:
-        conn.rollback()
+        # asegurar rollback por contexto; reportar error para logs
         print("Error register_company:", e)
         raise HTTPException(status_code=500, detail="Error interno durante el registro de empresa.")
 
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
