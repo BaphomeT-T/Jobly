@@ -44,6 +44,11 @@
       <button id="logoutBtn" class="border border-[#141514] text-[#141514] px-3 py-1 rounded-[24px] text-sm font-semibold hover:bg-[#141514] hover:text-white transition-colors">
         Cerrar sesión
       </button>
+
+      <!-- Filters button -->
+      <button id="filterBtn" title="Filtros" class="border border-[#cfd4d1] px-3 py-1 rounded-[24px] text-sm font-medium hover:bg-[#f5f5f5]">
+        Filtros
+      </button>
     </div>
   </header>
 
@@ -83,13 +88,174 @@
   <!-- Content -->
   <main class="px-[108px] pt-[80px] pb-[160px]">
     <h1 class="text-[40px] font-semibold text-black leading-[1.2] mb-[56px]">Recent Activities</h1>
-    <div class="bg-[#eff3f1] w-[600px] h-[252px] rounded-[4px] flex items-center justify-center">
-      <div class="w-[512px] flex flex-col items-center gap-4 text-center">
+    <div id="activitiesContainer" class="bg-[#eff3f1] w-[600px] min-h-[160px] rounded-[4px] p-6">
+      <!-- Contenido dinámico de vacantes / mensajes -->
+      <div id="activitiesMessage" class="w-[512px] flex flex-col items-center gap-4 text-center mx-auto">
         <p class="text-[24px] font-semibold text-black leading-[1.2]">No hay notificaciones</p>
         <p class="text-[16px] font-medium font-[Inter,sans-serif] leading-[1.9] text-[#606261]">Pronto estará la información de los postulantes y entrevistas.</p>
       </div>
     </div>
   </main>
+
+  <!-- Filters modal (hidden by default) -->
+  <div id="filterModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
+    <div class="bg-white rounded-lg p-6 w-[720px] max-w-[95%]">
+      <h2 class="text-lg font-semibold mb-4">Filtros de Vacantes</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Fecha desde</label>
+          <input id="dateFrom" type="date" class="w-full p-2 border rounded" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Fecha hasta</label>
+          <input id="dateTo" type="date" class="w-full p-2 border rounded" />
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium mb-2">Estado</label>
+          <div class="flex gap-4">
+            <label><input type="checkbox" class="estadoChk" value="Borrador" /> Borrador</label>
+            <label><input type="checkbox" class="estadoChk" value="Publicada" /> Publicada</label>
+            <label><input type="checkbox" class="estadoChk" value="Cerrada" /> Cerrada</label>
+          </div>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium mb-2">Modalidad</label>
+          <div class="flex gap-4 flex-wrap">
+            <label><input type="checkbox" class="modalidadChk" value="Presencial" /> Presencial</label>
+            <label><input type="checkbox" class="modalidadChk" value="Remoto" /> Remoto</label>
+            <label><input type="checkbox" class="modalidadChk" value="Híbrido" /> Híbrido</label>
+            <label><input type="checkbox" class="modalidadChk" value="Virtual" /> Virtual</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button id="clearFilters" class="px-4 py-2 border rounded">Limpiar</button>
+        <button id="applyFilters" class="px-4 py-2 bg-[#f23e8e] text-white rounded">Aplicar</button>
+        <button id="closeFilters" class="px-4 py-2 border rounded">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // Filter modal controls and filtering logic
+  (function(){
+    const filterBtn = document.getElementById('filterBtn');
+    const filterModal = document.getElementById('filterModal');
+    const closeFilters = document.getElementById('closeFilters');
+    const applyFilters = document.getElementById('applyFilters');
+    const clearFilters = document.getElementById('clearFilters');
+    const activitiesContainer = document.getElementById('activitiesContainer');
+    const activitiesMessage = document.getElementById('activitiesMessage');
+
+    let allVacantes = []; // cached vacantes
+
+    filterBtn?.addEventListener('click', () => {
+      filterModal.classList.remove('hidden');
+      filterModal.classList.add('flex');
+    });
+    closeFilters?.addEventListener('click', () => {
+      filterModal.classList.add('hidden');
+      filterModal.classList.remove('flex');
+    });
+
+    clearFilters?.addEventListener('click', () => {
+      document.getElementById('dateFrom').value = '';
+      document.getElementById('dateTo').value = '';
+      document.querySelectorAll('.estadoChk').forEach(ch => ch.checked = false);
+      document.querySelectorAll('.modalidadChk').forEach(ch => ch.checked = false);
+      // show all
+      renderVacantes(allVacantes);
+    });
+
+    applyFilters?.addEventListener('click', async () => {
+      // ensure we have vacantes
+      if (!allVacantes.length) {
+        await fetchVacantes();
+      }
+      const from = document.getElementById('dateFrom').value;
+      const to = document.getElementById('dateTo').value;
+      const estados = Array.from(document.querySelectorAll('.estadoChk:checked')).map(i=>i.value);
+      const modalidades = Array.from(document.querySelectorAll('.modalidadChk:checked')).map(i=>i.value);
+
+      const filtered = allVacantes.filter(v => {
+        // fecha filter
+        if (from) {
+          const fv = v.fecha_creacion ? new Date(v.fecha_creacion) : null;
+          if (!fv || fv < new Date(from + 'T00:00:00')) return false;
+        }
+        if (to) {
+          const fv = v.fecha_creacion ? new Date(v.fecha_creacion) : null;
+          if (!fv || fv > new Date(to + 'T23:59:59')) return false;
+        }
+        // estado filter
+        if (estados.length && !estados.includes(v.estado)) return false;
+        // modalidad filter (case-insensitive match; accept partial)
+        if (modalidades.length) {
+          const m = (v.modalidad || '').toLowerCase();
+          const ok = modalidades.some(sel => m.includes(sel.toLowerCase()));
+          if (!ok) return false;
+        }
+        return true;
+      });
+
+      renderVacantes(filtered);
+      filterModal.classList.add('hidden');
+      filterModal.classList.remove('flex');
+    });
+
+    async function fetchVacantes(){
+      try {
+        const res = await fetch('/api/vacantes/empresa');
+        if (!res.ok) {
+          console.warn('No se pudieron obtener vacantes para filtros');
+          return;
+        }
+        const data = await res.json();
+        allVacantes = data.vacantes || [];
+        renderVacantes(allVacantes);
+      } catch(e) {
+        console.error('Error fetching vacantes:', e);
+      }
+    }
+
+    function renderVacantes(list){
+      // clear container and render simple list
+      activitiesContainer.innerHTML = '';
+      if (!list || !list.length) {
+        activitiesContainer.appendChild(activitiesMessage);
+        activitiesMessage.querySelector('p').textContent = 'No se encontraron vacantes con esos filtros';
+        return;
+      }
+      const ul = document.createElement('div');
+      ul.className = 'space-y-4';
+      list.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'bg-white border p-4 rounded flex justify-between items-start';
+        card.innerHTML = `
+          <div>
+            <div class="font-semibold text-lg">${escapeHtml(v.titulo || 'Sin título')}</div>
+            <div class="text-sm text-gray-600">${escapeHtml(v.descripcion ? (v.descripcion.substring(0,120) + (v.descripcion.length>120?'...':'')) : '')}</div>
+            <div class="text-xs text-gray-500 mt-2">Estado: ${escapeHtml(v.estado||'')} • Modalidad: ${escapeHtml(v.modalidad||'')} • Creada: ${escapeHtml(v.fecha_creacion ? new Date(v.fecha_creacion).toLocaleString() : '')}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm font-semibold">${v.salario ? '$' + v.salario.toFixed(2) : ''}</div>
+          </div>
+        `;
+        ul.appendChild(card);
+      });
+      activitiesContainer.appendChild(ul);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+    }
+
+    // initial fetch to populate (only on company home; safe if API returns empty)
+    fetchVacantes();
+  })();
+  </script>
 
   <!-- Footer -->
   <footer class="border-t border-[#e5eae8] px-[108px] py-[24px] flex flex-col gap-[48px] items-center h-[235px] bg-white relative">
