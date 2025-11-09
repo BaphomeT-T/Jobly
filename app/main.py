@@ -8,7 +8,7 @@ import psycopg2
 import psycopg2.extras
 # **********************************************
 # IMPORTACIÓN CORREGIDA: Usamos "." para la importación relativa
-from .db import get_db_connection, hash_password, verify_password, identify_hash_scheme, verify_legacy_password, DDL_SQL 
+from .db import get_db_connection, hash_password, verify_password, identify_hash_scheme, verify_legacy_password, is_plain_password, DDL_SQL 
 # **********************************************
 
 app = FastAPI(title="Jobly Backend API")
@@ -237,8 +237,7 @@ from fastapi import Response
 @app.post("/api/login/")
 async def login_user(email: str = Form(...), password: str = Form(...)):
     """
-    Valida las credenciales y maneja hashes legacy (bcrypt). Si el hash es legacy y la verificación
-    tiene éxito, se re-hashea la contraseña con el esquema actual y se actualiza la DB.
+    Valida las credenciales y maneja migración de hashes legacy o texto plano.
     """
     conn = get_db_connection()
     if conn is None:
@@ -259,29 +258,43 @@ async def login_user(email: str = Form(...), password: str = Form(...)):
             stored_hash = user["password"]
             verified = False
 
-            # 1) Identificar con passlib si el hash es reconocido
+            # 1) Si passlib identifica el esquema -> verificar normalmente
             scheme = identify_hash_scheme(stored_hash)
-
             if scheme:
-                # esquema reconocido -> verificar normalmente
                 try:
                     verified = verify_password(password, stored_hash)
-                except Exception as e:
-                    # si por alguna razón falla la verificación, tratamos como no verificado
+                except Exception:
                     verified = False
             else:
-                # esquema no identificado -> intentar verificación legacy (bcrypt)
-                if verify_legacy_password(password, stored_hash):
-                    verified = True
-                    # intentamos migrar el hash al esquema actual
-                    try:
-                        new_hash = hash_password(password)
-                        cur.execute("UPDATE USUARIO SET Password = %s WHERE ID_Usuario = %s", (new_hash, user["id_usuario"]))
-                        conn.commit()
-                        print(f"Info: contraseña migrada a nuevo esquema para user_id={user['id_usuario']}")
-                    except Exception as e:
-                        conn.rollback()
-                        print("Warning: no se pudo actualizar hash al migrar:", e)
+                # 2) Si el valor en BD parece texto plano, comparar directamente y migrar
+                if is_plain_password(stored_hash):
+                    if password == (stored_hash or ""):
+                        verified = True
+                        try:
+                            new_hash = hash_password(password)
+                            cur.execute("UPDATE USUARIO SET Password = %s WHERE ID_Usuario = %s", (new_hash, user["id_usuario"]))
+                            conn.commit()
+                            print(f"Info: contraseña en texto plano migrada a hash para user_id={user['id_usuario']}")
+                        except Exception as e:
+                            conn.rollback()
+                            print("Warning: no se pudo actualizar hash al migrar desde plain:", e)
+                    else:
+                        verified = False
+                else:
+                    # 3) Intentar legacy (bcrypt)
+                    if verify_legacy_password(password, stored_hash):
+                        verified = True
+                        # migrar a esquema actual
+                        try:
+                            new_hash = hash_password(password)
+                            cur.execute("UPDATE USUARIO SET Password = %s WHERE ID_Usuario = %s", (new_hash, user["id_usuario"]))
+                            conn.commit()
+                            print(f"Info: contraseña legacy migrada a nuevo esquema para user_id={user['id_usuario']}")
+                        except Exception as e:
+                            conn.rollback()
+                            print("Warning: no se pudo actualizar hash al migrar legacy:", e)
+                    else:
+                        verified = False
 
             if not verified:
                 raise HTTPException(status_code=401, detail="Credenciales incorrectas")
@@ -375,36 +388,72 @@ async def register_employer(
         raise HTTPException(status_code=500, detail="Error de conexión a la DB")
 
     logo_bytes = await logo.read() if logo else None
-
     hashed_password = hash_password(password)
 
-    user_sql = """
-    INSERT INTO USUARIO (Email, Password, Rol)
-    VALUES (%s, %s, %s)
-    RETURNING ID_Usuario;
-    """
-    empresa_sql = """
-    INSERT INTO EMPRESA (FK_ID_Usuario, Foto_Logo_BIN, Nombre_Empresa, RUC, Categoria, Descripcion)
-    VALUES (%s, %s, %s, %s, %s, %s)
-    RETURNING ID_Empresa;
-    """
     try:
-        with conn.cursor() as cur:
-            cur.execute(user_sql, (email, hashed_password, 'Empresa'))
-            user_id = cur.fetchone()[0]
-            cur.execute(empresa_sql, (user_id, psycopg2.Binary(logo_bytes) if logo_bytes else None, nombre_empresa, ruc or None, categoria or None, descripcion or None))
-            empresa_id = cur.fetchone()[0]
-            conn.commit()
-            return {"message": "Empresa registrada exitosamente", "user_id": user_id, "empresa_id": empresa_id}
-    except psycopg2.errors.UniqueViolation as e:
-        conn.rollback()
-        raise HTTPException(status_code=400, detail="El email o RUC ya está registrado.")
+        # usar contexto de conexión para commit/rollback automáticos
+        with conn:
+            with conn.cursor() as cur:
+                # Insertar usuario
+                cur.execute(
+                    """
+                    INSERT INTO USUARIO (Email, Password, Rol)
+                    VALUES (%s, %s, %s)
+                    RETURNING ID_Usuario;
+                    """,
+                    (email, hashed_password, 'Empresa')
+                )
+                row = cur.fetchone()
+                if not row:
+                    raise Exception("No se obtuvo ID_Usuario tras INSERT.")
+                user_id = row[0]
+
+                # Insertar empresa
+                cur.execute(
+                    """
+                    INSERT INTO EMPRESA (FK_ID_Usuario, Foto_Logo_BIN, Nombre_Empresa, RUC, Categoria, Descripcion)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING ID_Empresa;
+                    """,
+                    (
+                        user_id,
+                        psycopg2.Binary(logo_bytes) if logo_bytes else None,
+                        nombre_empresa,
+                        ruc or None,
+                        categoria or None,
+                        descripcion or None
+                    )
+                )
+                empresa_row = cur.fetchone()
+                if not empresa_row:
+                    raise Exception("No se obtuvo ID_Empresa tras INSERT.")
+                empresa_id = empresa_row[0]
+
+        # si llegamos aquí, la transacción fue confirmada por 'with conn'
+        return {"message": "Empresa registrada exitosamente", "user_id": user_id, "empresa_id": empresa_id}
+
+    except psycopg2.IntegrityError as e:
+        # transacción revertida automáticamente por 'with conn'
+        detail = ""
+        try:
+            detail = (e.diag.message_detail or "").lower()
+        except Exception:
+            detail = str(e).lower()
+        if "ruc" in detail or "ruc" in str(e).lower():
+            msg = "RUC ya registrado."
+        elif "email" in detail or "email" in str(e).lower():
+            msg = "Email ya registrado."
+        else:
+            msg = "Email o RUC ya registrado."
+        raise HTTPException(status_code=400, detail=msg)
     except Exception as e:
-        conn.rollback()
         print("Error register_employer:", e)
         raise HTTPException(status_code=500, detail="Error interno durante el registro de empresa.")
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 # --- Nuevo endpoint: registro de candidato via multipart/form-data ---
 @app.post("/api/register_candidate/")

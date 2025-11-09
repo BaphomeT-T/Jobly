@@ -65,6 +65,32 @@ def identify_hash_scheme(hashed_password: str) -> str | None:
     except Exception:
         return None
 
+def is_plain_password(stored_value: str) -> bool:
+    """
+    Detecta si 'stored_value' parece ser una contraseña en texto plano (no hasheada).
+    Reglas simples:
+    - si comienza con '$' usualmente es un hash (pbkdf2, bcrypt, etc) -> no es plain
+    - si pwd_context.identify lo reconoce -> no es plain
+    - en otro caso asumimos que es texto plano (esto permite migrar registros manuales)
+    """
+    try:
+        if stored_value is None:
+            return False
+        if not isinstance(stored_value, str):
+            try:
+                stored_value = stored_value.decode("utf-8")
+            except Exception:
+                return False
+        if stored_value.startswith("$"):
+            return False
+        # si passlib identifica esquema, no es plain
+        if identify_hash_scheme(stored_value):
+            return False
+        # resto: tratamos como plain text (migrable)
+        return True
+    except Exception:
+        return False
+
 def verify_legacy_password(plain_password: str, hashed_password: str) -> bool:
     """
     Intento de verificación para formatos legacy (por ejemplo bcrypt).
