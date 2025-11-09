@@ -145,22 +145,17 @@
       const fd = new FormData();
       fd.append('email', data.email || '');
       fd.append('password', data.password || '');
-      // nombre_empresa en el backend
       fd.append('nombre_empresa', data.nombreEmpresa || data.nombreEmpresa || '');
       fd.append('ruc', data.ruc || '');
-      // categoría y descripción vienen en step2
       const step2 = data.step2 || {};
       fd.append('categoria', step2.categoria || '');
       fd.append('descripcion', step2.descripcion || '');
 
-      // Adjuntar logo si el input tiene archivo
       const logoInput = document.getElementById('logoFile');
       if (logoInput && logoInput.files && logoInput.files[0]) {
         fd.append('logo', logoInput.files[0]);
       }
 
-      // Feedback mínimo
-      const btn = event?.target;
       try {
         const res = await fetch('/api/register_employer/', { method: 'POST', body: fd });
         const resJson = await res.json().catch(()=> ({}));
@@ -168,7 +163,12 @@
           alert(resJson.detail || 'Error registrando la empresa: ' + (resJson.message || res.status));
           return;
         }
-        // éxito: limpiar y redirigir a login
+        // éxito: guardar email para uso inmediato y limpiar
+        try {
+          // Guardar también jobly_user estilo login para permitir redirección y uso en cliente
+          localStorage.setItem('authEmail', data.email || '');
+          localStorage.setItem('jobly_user', JSON.stringify({ user_id: resJson.user_id, email: data.email || '', rol: 'Empresa' }));
+        } catch(e) { /* ignore */ }
         localStorage.removeItem('employerRegistration');
         alert('Empresa registrada exitosamente. Ahora puedes iniciar sesión.');
         window.location.href = '/login';

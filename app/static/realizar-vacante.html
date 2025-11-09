@@ -277,10 +277,28 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // Email de la empresa (ajusta esta parte a tu sesión real)
-    const empresaEmail = localStorage.getItem('authEmail') || ''; // <— CAMBIA si usas otra clave
+    // Email de la empresa: varios fallbacks (authEmail, jobly_user, employerRegistration)
+    let empresaEmail = localStorage.getItem('authEmail');
     if (!empresaEmail) {
-      alert('No se encontró el email de empresa en el cliente. Inicia sesión como Empresa.');
+      try {
+        const ju = localStorage.getItem('jobly_user');
+        if (ju) {
+          const parsed = JSON.parse(ju);
+          empresaEmail = parsed?.email || empresaEmail;
+        }
+      } catch (_) { /* ignore */ }
+    }
+    if (!empresaEmail) {
+      try {
+        const empReg = localStorage.getItem('employerRegistration');
+        if (empReg) {
+          const parsed = JSON.parse(empReg);
+          empresaEmail = parsed?.email || empresaEmail;
+        }
+      } catch(_) { /* ignore */ }
+    }
+    if (!empresaEmail) {
+      alert('No se encontró el email de empresa en el cliente. Inicia sesión o regístrate como Empresa.');
       return;
     }
 

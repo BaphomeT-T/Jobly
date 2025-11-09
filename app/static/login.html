@@ -155,6 +155,9 @@
             email: data.email,
             rol: data.rol
           }));
+          // key usada por páginas como crear-vacante
+          localStorage.setItem('authEmail', data.email || '');
+          localStorage.setItem('authRole', data.rol || '');
         } catch {}
 
         messageDiv.className = 'mt-4 text-sm text-green-600';
