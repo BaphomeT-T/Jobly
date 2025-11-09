@@ -209,7 +209,9 @@
   </footer>
 
   <script>
-    
+    // Central cache of vacantes
+    let allVacantes = [];
+
     // Función para formatear fecha
     function formatDate(dateString) {
       if (!dateString) return 'N/A';
@@ -270,13 +272,34 @@
       `;
     }
 
+    // Render function used by load / search / filters
+    function renderVacantes(list) {
+      const loadingState = document.getElementById('loadingState');
+      const emptyState = document.getElementById('emptyState');
+      const tableBody = document.getElementById('vacantesTableBody');
+
+      // hide loading indicator once rendering
+      if (loadingState) loadingState.classList.add('hidden');
+
+      tableBody.innerHTML = '';
+      if (!list || list.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        return;
+      } else {
+        if (emptyState) emptyState.classList.add('hidden');
+      }
+
+      tableBody.innerHTML = list.map((v, i) => createVacanteRow(v, i)).join('');
+    }
+
     // Cargar vacantes
     async function loadVacantes() {
       const loadingState = document.getElementById('loadingState');
       const emptyState = document.getElementById('emptyState');
       const tableBody = document.getElementById('vacantesTableBody');
-      
+
       try {
+        if (loadingState) loadingState.classList.remove('hidden');
         const response = await fetch('/api/vacantes/empresa');
         
         if (!response.ok) {
@@ -290,32 +313,31 @@
         const data = await response.json();
         const vacantes = data.vacantes || [];
 
-        loadingState.classList.add('hidden');
+        // cache and render
+        allVacantes = vacantes;
+        renderVacantes(allVacantes);
 
-        if (vacantes.length === 0) {
-          emptyState.classList.remove('hidden');
-        } else {
-          emptyState.classList.add('hidden');
-          tableBody.innerHTML = vacantes.map((v, i) => createVacanteRow(v, i)).join('');
-        }
       } catch (error) {
         console.error('Error cargando vacantes:', error);
-        loadingState.innerHTML = '<p class="text-red-600">Error al cargar las vacantes. Por favor intenta nuevamente.</p>';
+        if (loadingState) loadingState.innerHTML = '<p class="text-red-600">Error al cargar las vacantes. Por favor intenta nuevamente.</p>';
       }
     }
 
-    // Búsqueda en tiempo real
+    // Búsqueda en tiempo real (usa allVacantes y renderVacantes)
     document.getElementById('searchInput').addEventListener('input', function(e) {
-      const searchTerm = e.target.value.toLowerCase();
-      const rows = document.querySelectorAll('#vacantesTableBody > div');
-      
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+      const searchTerm = (e.target.value || '').toLowerCase().trim();
+      if (!searchTerm) {
+        renderVacantes(allVacantes);
+        return;
+      }
+      const filtered = allVacantes.filter(v => {
+        const txt = ((v.titulo||'') + ' ' + (v.descripcion||'') + ' ' + (v.modalidad||'') + ' ' + (v.estado||'')).toLowerCase();
+        return txt.includes(searchTerm);
       });
+      renderVacantes(filtered);
     });
 
-    // Filtering logic for ver-vacantes
+    // Modal & filters integration (hooked to existing SVG #filterIcon)
     (function(){
       const filterIcon = document.getElementById('filterIcon');
       const filterModal = document.getElementById('filterModal');
@@ -324,28 +346,29 @@
       const clearFilters = document.getElementById('clearFilters');
       const dateFromEl = document.getElementById('dateFrom');
       const dateToEl = document.getElementById('dateTo');
-      let allVacantes = []; // cached
 
       function openModal(){ if(!filterModal) return; filterModal.classList.remove('hidden'); filterModal.classList.add('flex'); }
       function closeModal(){ if(!filterModal) return; filterModal.classList.add('hidden'); filterModal.classList.remove('flex'); }
 
-      filterIcon?.addEventListener('click', (e) => { e.preventDefault(); openModal(); });
+      filterIcon?.addEventListener('click', (e)=>{ e.preventDefault(); openModal(); });
       closeFilters?.addEventListener('click', closeModal);
 
       clearFilters?.addEventListener('click', () => {
-        dateFromEl.value = ''; dateToEl.value = '';
+        if (dateFromEl) dateFromEl.value = '';
+        if (dateToEl) dateToEl.value = '';
         document.querySelectorAll('.estadoChk').forEach(c=>c.checked=false);
         document.querySelectorAll('.modalidadChk').forEach(c=>c.checked=false);
         renderVacantes(allVacantes);
       });
 
       applyFilters?.addEventListener('click', () => {
-        const from = dateFromEl.value;
-        const to = dateToEl.value;
+        const from = dateFromEl ? dateFromEl.value : '';
+        const to = dateToEl ? dateToEl.value : '';
         const estados = Array.from(document.querySelectorAll('.estadoChk:checked')).map(i=>i.value);
         const modalidades = Array.from(document.querySelectorAll('.modalidadChk:checked')).map(i=>i.value);
 
         const filtered = allVacantes.filter(v => {
+          // fecha filter
           if (from) {
             const fv = v.fecha_creacion ? new Date(v.fecha_creacion) : null;
             if (!fv || fv < new Date(from + 'T00:00:00')) return false;
@@ -354,7 +377,9 @@
             const fv = v.fecha_creacion ? new Date(v.fecha_creacion) : null;
             if (!fv || fv > new Date(to + 'T23:59:59')) return false;
           }
+          // estado filter
           if (estados.length && !estados.includes(v.estado)) return false;
+          // modalidad filter (case-insensitive)
           if (modalidades.length) {
             const m = (v.modalidad || '').toLowerCase();
             const ok = modalidades.some(sel => m.includes(sel.toLowerCase()));
@@ -366,9 +391,6 @@
         renderVacantes(filtered);
         closeModal();
       });
-
-      // expose helper to set allVacantes after load
-      window.__setAllVacantes = function(arr){ allVacantes = Array.isArray(arr)?arr:[]; };
     })();
 
     // Cargar vacantes al cargar la página
