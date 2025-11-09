@@ -111,6 +111,76 @@ async def realizar_vacante():
 async def ver_vacantes():
     return _serve_static_html("ver-vacantes.html", "Ver Vacantes")
 
+# API: Obtener vacantes de una empresa por email
+@app.get("/api/vacantes/empresa")
+async def get_vacantes_empresa(email: str):
+    """
+    Obtiene todas las vacantes de una empresa identificada por el email del usuario.
+    Incluye el conteo de postulaciones por vacante.
+    """
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            # Obtener ID_Empresa desde el email
+            cur.execute("""
+                SELECT e.ID_Empresa
+                FROM EMPRESA e
+                JOIN USUARIO u ON e.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s
+                LIMIT 1;
+            """, (email,))
+            empresa = cur.fetchone()
+            
+            if not empresa:
+                return {"vacantes": []}
+            
+            id_empresa = empresa["id_empresa"]
+            
+            # Obtener vacantes con conteo de postulaciones
+            cur.execute("""
+                SELECT 
+                    v.ID_Vacante,
+                    v.Titulo,
+                    v.Descripcion,
+                    v.Salario,
+                    v.Modalidad,
+                    v.Estado,
+                    v.Fecha_Creacion,
+                    COUNT(p.ID_Postulacion) as num_postulaciones
+                FROM VACANTE v
+                LEFT JOIN POSTULACION p ON v.ID_Vacante = p.FK_ID_Vacante
+                WHERE v.FK_ID_Empresa = %s
+                GROUP BY v.ID_Vacante
+                ORDER BY v.Fecha_Creacion DESC;
+            """, (id_empresa,))
+            
+            vacantes = cur.fetchall()
+            
+            # Convertir a formato JSON serializable
+            result = []
+            for v in vacantes:
+                result.append({
+                    "id_vacante": v["id_vacante"],
+                    "titulo": v["titulo"],
+                    "descripcion": v["descripcion"],
+                    "salario": float(v["salario"]) if v["salario"] else None,
+                    "modalidad": v["modalidad"],
+                    "estado": v["estado"],
+                    "fecha_creacion": v["fecha_creacion"].isoformat() if v["fecha_creacion"] else None,
+                    "num_postulaciones": v["num_postulaciones"]
+                })
+            
+            return {"vacantes": result}
+            
+    except Exception as e:
+        print(f"Error obteniendo vacantes: {e}")
+        raise HTTPException(status_code=500, detail="Error interno obteniendo vacantes")
+    finally:
+        conn.close()
+
 # Ruta para actividades (empresa)
 @app.get("/actividades", response_class=HTMLResponse)
 async def actividades():
