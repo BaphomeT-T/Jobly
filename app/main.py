@@ -8,7 +8,7 @@ import psycopg2
 import psycopg2.extras
 # **********************************************
 # IMPORTACIÓN CORREGIDA: Usamos "." para la importación relativa
-from .db import get_db_connection, hash_password, verify_password, DDL_SQL 
+from .db import get_db_connection, hash_password, verify_password, identify_hash_scheme, verify_legacy_password, DDL_SQL 
 # **********************************************
 
 app = FastAPI(title="Jobly Backend API")
@@ -237,7 +237,8 @@ from fastapi import Response
 @app.post("/api/login/")
 async def login_user(email: str = Form(...), password: str = Form(...)):
     """
-    Valida las credenciales y devuelve datos mínimos + ruta de redirección.
+    Valida las credenciales y maneja hashes legacy (bcrypt). Si el hash es legacy y la verificación
+    tiene éxito, se re-hashea la contraseña con el esquema actual y se actualiza la DB.
     """
     conn = get_db_connection()
     if conn is None:
@@ -255,8 +256,34 @@ async def login_user(email: str = Form(...), password: str = Form(...)):
             if not user:
                 raise HTTPException(status_code=401, detail="Credenciales incorrectas")
             
-            # OJO: DictCursor devuelve claves por nombre de columna; accedemos en minúsculas
-            if not verify_password(password, user["password"]):
+            stored_hash = user["password"]
+            verified = False
+
+            # 1) Identificar con passlib si el hash es reconocido
+            scheme = identify_hash_scheme(stored_hash)
+
+            if scheme:
+                # esquema reconocido -> verificar normalmente
+                try:
+                    verified = verify_password(password, stored_hash)
+                except Exception as e:
+                    # si por alguna razón falla la verificación, tratamos como no verificado
+                    verified = False
+            else:
+                # esquema no identificado -> intentar verificación legacy (bcrypt)
+                if verify_legacy_password(password, stored_hash):
+                    verified = True
+                    # intentamos migrar el hash al esquema actual
+                    try:
+                        new_hash = hash_password(password)
+                        cur.execute("UPDATE USUARIO SET Password = %s WHERE ID_Usuario = %s", (new_hash, user["id_usuario"]))
+                        conn.commit()
+                        print(f"Info: contraseña migrada a nuevo esquema para user_id={user['id_usuario']}")
+                    except Exception as e:
+                        conn.rollback()
+                        print("Warning: no se pudo actualizar hash al migrar:", e)
+
+            if not verified:
                 raise HTTPException(status_code=401, detail="Credenciales incorrectas")
             
             rol = user["rol"]

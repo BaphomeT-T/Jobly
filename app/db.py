@@ -54,8 +54,38 @@ def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifica una contraseña hasheada."""
+    """Verifica una contraseña usando el CryptContext actual.
+    Puede lanzar excepciones internas; el llamador puede usar identify_hash_scheme antes."""
     return pwd_context.verify(plain_password, hashed_password)
+
+def identify_hash_scheme(hashed_password: str) -> str | None:
+    """Devuelve el nombre del esquema que passlib identifica para este hash, o None si no lo reconoce."""
+    try:
+        return pwd_context.identify(hashed_password)
+    except Exception:
+        return None
+
+def verify_legacy_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    Intento de verificación para formatos legacy (por ejemplo bcrypt).
+    Si bcrypt no está instalado o la verificación falla, devuelve False.
+    """
+    try:
+        if not isinstance(hashed_password, str):
+            try:
+                hashed_password = hashed_password.decode("utf-8")
+            except Exception:
+                return False
+        # Detectar hashes bcrypt ($2a$, $2b$, $2y$)
+        if hashed_password.startswith("$2"):
+            try:
+                import bcrypt  # import dinámico; puede no existir en el entorno
+                return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+            except Exception:
+                return False
+        return False
+    except Exception:
+        return False
 
 def init_database():
     """Inicializa las tablas de la base de datos si no existen."""
