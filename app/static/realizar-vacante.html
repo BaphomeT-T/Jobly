@@ -164,7 +164,6 @@
           name="salario"
           placeholder="Ej. 2500.00"
           class="w-full h-[56px] px-4 pr-12 border border-[#cfd4d1] rounded-[4px] text-[14px] font-medium text-[#141514] placeholder:text-[#b8bdbb] focus:border-[#c89bfa] focus:outline-none"
-          pattern="^\\d+(?:[\\.,]\\d{1,2})?$"
           aria-describedby="salarioHelp" />
         <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[#8a8f8d] text-sm">USD</span>
       </div>
@@ -252,16 +251,14 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // Validación salario (más tolerante)
+    // Validación salario (más tolerante: acepta enteros y decimales hasta 2 decimales)
     const raw = (salarioInput.value || '').trim().replace(',', '.');
-    // permitir enteros y decimales hasta 2 posiciones
     const parsed = Number(raw);
     if (!raw || !isFinite(parsed) || parsed < 0) {
       errorEl.classList.remove('hidden');
       salarioInput.focus();
       return;
     }
-    // comprobar máximo 2 decimales si hay parte decimal
     const parts = raw.split('.');
     if (parts.length > 1 && parts[1].length > 2) {
       errorEl.classList.remove('hidden');
