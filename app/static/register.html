@@ -45,10 +45,32 @@
     const form = document.getElementById('registerForm');
     const msg = document.getElementById('msg');
 
+    function isValidEmail(email) {
+      return /^[\w\.-]+@[\w\.-]+\.\w{2,}$/.test(email);
+    }
+    function isValidPassword(pw) {
+      return /^(?=.*[A-Z])(?=.*[a-zA-Z])(?=.*\d).{8,}$/.test(pw);
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       msg.textContent = 'Enviando...';
       const fd = new FormData(form);
+
+      // Client-side validation
+      const email = (fd.get('email') || '').toString();
+      const password = (fd.get('password') || '').toString();
+      if (!isValidEmail(email)) {
+        msg.className = 'text-red-600 mb-4';
+        msg.textContent = 'Email inválido.';
+        return;
+      }
+      if (!isValidPassword(password)) {
+        msg.className = 'text-red-600 mb-4';
+        msg.textContent = 'La contraseña debe tener mínimo 8 caracteres, al menos una letra, una mayúscula y un número.';
+        return;
+      }
+
       try {
         const res = await fetch('/api/register_candidate/', {
           method: 'POST',

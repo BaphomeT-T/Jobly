@@ -115,6 +115,16 @@
   </div>
 
   <script>
+      function isValidEmail(email) {
+        return /^[\w\.-]+@[\w\.-]+\.\w{2,}$/.test(email);
+      }
+      function isValidPassword(pw) {
+        return /^(?=.*[A-Z])(?=.*[a-zA-Z])(?=.*\d).{8,}$/.test(pw);
+      }
+      function isValidRucEc(ruc) {
+        return /^(?:0[1-9]|1[0-9]|2[0-4])\d{11}$/.test(ruc);
+      }
+
     // Cargar lo guardado
     window.addEventListener('DOMContentLoaded', () => {
       const saved = localStorage.getItem('employerRegistration');
@@ -138,6 +148,24 @@
     function goEmployerStep2(){
       const form = document.getElementById('employerStep1');
       if(!form.checkValidity()){ form.reportValidity(); return; }
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const ruc = document.getElementById('ruc').value.trim();
+
+      // Client-side validations
+      if (!isValidEmail(email)) {
+        alert('Email inválido.');
+        return;
+      }
+      if (!isValidPassword(password)) {
+        alert('La contraseña debe tener mínimo 8 caracteres, al menos una letra, una mayúscula y un número.');
+        return;
+      }
+      if (ruc && !isValidRucEc(ruc)) {
+        alert('RUC inválido. Debe tener 13 dígitos y comenzar con código provincial válido (01-24).');
+        return;
+      }
 
       const data = {
         nombreEmpresa: document.getElementById('nombreEmpresa').value,

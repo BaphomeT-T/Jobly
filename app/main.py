@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import psycopg2
 import psycopg2.extras
+import re
 # **********************************************
 # IMPORTACIÓN CORREGIDA: Usamos "." para la importación relativa
 from .db import get_db_connection, hash_password, verify_password, identify_hash_scheme, verify_legacy_password, is_plain_password, DDL_SQL 
@@ -387,14 +388,36 @@ async def register_employer(
     if conn is None:
         raise HTTPException(status_code=500, detail="Error de conexión a la DB")
 
+    # Validaciones básicas
+    if not is_valid_email(email):
+        raise HTTPException(status_code=400, detail="Email inválido.")
+    if not is_valid_password(password):
+        raise HTTPException(status_code=400, detail="La contraseña debe tener mínimo 8 caracteres, al menos una letra, una mayúscula y un número.")
+    if ruc:
+        if not is_valid_ruc_ec(ruc):
+            raise HTTPException(status_code=400, detail="RUC inválido. Debe ser 13 dígitos y comenzar con código de provincia válido (01-24).")
+
+    # Verificar duplicados antes de insertar
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM USUARIO WHERE Email = %s LIMIT 1;", (email,))
+            if cur.fetchone():
+                raise HTTPException(status_code=400, detail="Email ya registrado.")
+            if ruc:
+                cur.execute("SELECT 1 FROM EMPRESA WHERE RUC = %s LIMIT 1;", (ruc,))
+                if cur.fetchone():
+                    raise HTTPException(status_code=400, detail="RUC ya registrado.")
+    finally:
+        # no cerramos la conexión aquí, se usa luego
+        pass
+
     logo_bytes = await logo.read() if logo else None
     hashed_password = hash_password(password)
 
     try:
-        # usar contexto de conexión para commit/rollback automáticos
+        # Transacción: insertar usuario + empresa
         with conn:
             with conn.cursor() as cur:
-                # Insertar usuario
                 cur.execute(
                     """
                     INSERT INTO USUARIO (Email, Password, Rol)
@@ -408,7 +431,6 @@ async def register_employer(
                     raise Exception("No se obtuvo ID_Usuario tras INSERT.")
                 user_id = row[0]
 
-                # Insertar empresa
                 cur.execute(
                     """
                     INSERT INTO EMPRESA (FK_ID_Usuario, Foto_Logo_BIN, Nombre_Empresa, RUC, Categoria, Descripcion)
@@ -429,23 +451,25 @@ async def register_employer(
                     raise Exception("No se obtuvo ID_Empresa tras INSERT.")
                 empresa_id = empresa_row[0]
 
-        # si llegamos aquí, la transacción fue confirmada por 'with conn'
         return {"message": "Empresa registrada exitosamente", "user_id": user_id, "empresa_id": empresa_id}
 
     except psycopg2.IntegrityError as e:
         # transacción revertida automáticamente por 'with conn'
+        conn.rollback()
         detail = ""
         try:
             detail = (e.diag.message_detail or "").lower()
         except Exception:
             detail = str(e).lower()
-        if "ruc" in detail or "ruc" in str(e).lower():
+        if "ruc" in detail:
             msg = "RUC ya registrado."
-        elif "email" in detail or "email" in str(e).lower():
+        elif "email" in detail:
             msg = "Email ya registrado."
         else:
             msg = "Email o RUC ya registrado."
         raise HTTPException(status_code=400, detail=msg)
+    except HTTPException:
+        raise
     except Exception as e:
         print("Error register_employer:", e)
         raise HTTPException(status_code=500, detail="Error interno durante el registro de empresa.")
@@ -467,6 +491,21 @@ async def register_candidate(
     conn = get_db_connection()
     if conn is None:
         raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+
+    # Validaciones
+    if not is_valid_email(email):
+        raise HTTPException(status_code=400, detail="Email inválido.")
+    if not is_valid_password(password):
+        raise HTTPException(status_code=400, detail="La contraseña debe tener mínimo 8 caracteres, al menos una letra, una mayúscula y un número.")
+
+    # Verificar duplicado de email
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM USUARIO WHERE Email = %s LIMIT 1;", (email,))
+            if cur.fetchone():
+                raise HTTPException(status_code=400, detail="El email ya está registrado.")
+    except HTTPException:
+        raise
 
     # leer archivos si existen
     cv_bytes = await cv.read() if cv else None
