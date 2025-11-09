@@ -160,21 +160,31 @@
         const res = await fetch('/api/register_employer/', { method: 'POST', body: fd });
         const resJson = await res.json().catch(()=> ({}));
         if (!res.ok) {
+          // Mantener datos en localStorage para que el usuario pueda corregir
+          try { localStorage.setItem('employerRegistration', JSON.stringify(data)); } catch(e){/* ignore */ }
+
+          // Guardar error temporal para mostrar en el paso 1 si deseas
+          try { localStorage.setItem('employerRegistrationError', resJson.detail || (resJson.message || 'Error registrando la empresa')); } catch(e){/* ignore */ }
+
+          // Informar y enviar al paso 1 para corregir email/RUC
           alert(resJson.detail || 'Error registrando la empresa: ' + (resJson.message || res.status));
+          window.location.href = '/register/employer/step1';
           return;
         }
-        // éxito: guardar email para uso inmediato y limpiar
+        // éxito: guardar email y limpiar datos de registro
         try {
-          // Guardar también jobly_user estilo login para permitir redirección y uso en cliente
           localStorage.setItem('authEmail', data.email || '');
           localStorage.setItem('jobly_user', JSON.stringify({ user_id: resJson.user_id, email: data.email || '', rol: 'Empresa' }));
         } catch(e) { /* ignore */ }
         localStorage.removeItem('employerRegistration');
+        localStorage.removeItem('employerRegistrationError');
         alert('Empresa registrada exitosamente. Ahora puedes iniciar sesión.');
         window.location.href = '/login';
       } catch (err) {
         console.error('Error al registrar empresa:', err);
         alert('Error de conexión al registrar la empresa. Reintenta.');
+        // opcional: dejar los datos y volver al paso 1
+        window.location.href = '/register/employer/step1';
       }
     }
 
