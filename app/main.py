@@ -8,6 +8,14 @@ from pydantic import BaseModel
 import psycopg2
 import psycopg2.extras
 import re
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # **********************************************
 # IMPORTACIÓN CORREGIDA: Usamos "." para la importación relativa
@@ -26,11 +34,17 @@ app.add_middleware(
 )
 
 # Sesiones firmadas (HttpOnly cookie)
+session_secret = os.getenv("SESSION_SECRET", "dev-session-secret-change")
+logger.info(f"Configuring SessionMiddleware with secret: {session_secret[:10]}...")
 app.add_middleware(
     SessionMiddleware,
-    secret_key=os.getenv("SESSION_SECRET", "dev-session-secret-change"),
+    secret_key=session_secret,
     same_site="lax"
 )
+
+logger.info("✅ FastAPI app configured successfully")
+logger.info(f"🚀 Starting Jobly API - PORT: {os.getenv('PORT', 'not set')}")
+logger.info(f"📦 Database URL configured: {'Yes' if os.getenv('DATABASE_PUBLIC_URL') or os.getenv('DATABASE_URL') else 'No'}")
 
 # ----------------------------------------------------
 # 1. Rutas Estáticas y Servir HTML
@@ -44,11 +58,13 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 @app.get("/", response_class=HTMLResponse)
 async def serve_home():
     """Sirve el archivo index.html para la pantalla de inicio."""
+    logger.info("Serving index.html at root /")
     try:
         # Usamos 'utf-8' explícitamente y la ruta relativa corregida
         with open(os.path.join(os.path.dirname(__file__), "static", "index.html"), "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
+        logger.error("index.html not found")
         return HTMLResponse("<h1>Error 404: Archivo index.html no encontrado.</h1>", status_code=404)
 
 # --- Nueva ruta para servir el formulario de registro de candidato

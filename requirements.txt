@@ -4,3 +4,4 @@ psycopg2-binary
 passlib[bcrypt]
 python-multipart
 python-dotenv
+itsdangerous
