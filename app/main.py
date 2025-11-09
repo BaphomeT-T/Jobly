@@ -94,6 +94,26 @@ async def home_empleados():
 async def serve_login():
     return _serve_static_html("login.html", "Login")
 
+# Ruta para página de éxito - vacante publicada
+@app.get("/vacante-publicada", response_class=HTMLResponse)
+async def vacante_publicada():
+    return _serve_static_html("Vacante-publicada.html", "Vacante Publicada")
+
+# Ruta para crear/realizar vacante (formulario)
+@app.get("/realizar-vacante", response_class=HTMLResponse)
+async def realizar_vacante():
+    return _serve_static_html("realizar-vacante.html", "Crear Vacante")
+
+# Ruta para ver vacantes (empresa)
+@app.get("/ver-vacantes", response_class=HTMLResponse)
+async def ver_vacantes():
+    return _serve_static_html("ver-vacantes.html", "Ver Vacantes")
+
+# Ruta para actividades (empresa)
+@app.get("/actividades", response_class=HTMLResponse)
+async def actividades():
+    return _serve_static_html("actividades.html", "Actividades")
+
 # Ruta de debug para verificar archivos estáticos
 @app.get("/debug/static-files")
 async def debug_static_files():
@@ -254,6 +274,60 @@ async def login_user(email: str = Form(...), password: str = Form(...)):
     except Exception as e:
         print(f"Error durante el login: {e}")
         raise HTTPException(status_code=500, detail="Error interno durante el login.")
+    finally:
+        conn.close()
+        
+
+# --- Crear Vacante ---
+class VacanteCreate(BaseModel):
+    titulo: str
+    descripcion: str | None = None
+    salario: float | None = None
+    modalidad: str
+    # Para identificar a qué empresa pertenece la vacante:
+    empresa_email: str  # email del USUARIO dueño de la EMPRESA
+
+@app.post("/api/vacantes/")
+async def crear_vacante(data: VacanteCreate):
+    """
+    Crea una vacante para la empresa asociada al email indicado.
+    Busca el ID_Empresa vía USUARIO.Email -> EMPRESA.FK_ID_Usuario
+    """
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+
+    try:
+        with conn.cursor() as cur:
+            # 1) Obtener ID_Empresa desde el email del usuario
+            cur.execute("""
+                SELECT e.ID_Empresa
+                FROM EMPRESA e
+                JOIN USUARIO u ON e.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s
+                LIMIT 1;
+            """, (data.empresa_email,))
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="No se encontró una empresa asociada a ese email")
+            id_empresa = row[0]
+
+            # 2) Insertar la VACANTE
+            cur.execute("""
+                INSERT INTO VACANTE (FK_ID_Empresa, Titulo, Descripcion, Salario, Modalidad, Estado)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING ID_Vacante;
+            """, (id_empresa, data.titulo, data.descripcion, data.salario, data.modalidad, 'Publicada'))
+            id_vacante = cur.fetchone()[0]
+            conn.commit()
+
+            return {"message": "Vacante creada", "id_vacante": id_vacante}
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        print("Error crear_vacante:", e)
+        raise HTTPException(status_code=500, detail="Error interno creando la vacante")
     finally:
         conn.close()
 
