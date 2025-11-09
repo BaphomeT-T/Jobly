@@ -216,4 +216,8 @@ CREATE TABLE IF NOT EXISTS ENTREVISTA (
     Enlace_Videollamada TEXT,
     Estado VARCHAR(50) NOT NULL CHECK (Estado IN ('Propuesta','Confirmada','Reprogramada')) DEFAULT 'Propuesta'
 );
+
+-- Si la tabla VACANTE ya existe, añadimos la columna Fecha_Creacion si falta.
+ALTER TABLE VACANTE
+    ADD COLUMN IF NOT EXISTS Fecha_Creacion TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP;
 """
