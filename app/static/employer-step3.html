@@ -106,7 +106,7 @@
       <!-- Continue -->
       <div class="pt-4">
   <button type="button"
-    onclick="window.location.href = '/login'"
+    onclick="finishEmployer()"
                 class="bg-[#f23e8e] text-[#13060e] px-6 py-3 rounded-full font-semibold text-[16px] h-[48px] hover:bg-[#d93578] transition-colors">
           Continue
         </button>
@@ -115,53 +115,89 @@
   </main>
 
   <script>
-    // Restaurar datos si existen (mismo patrón que empleado)
+    // Restaurar datos si existen
     window.addEventListener('DOMContentLoaded', function() {
       const saved = localStorage.getItem('employerRegistration');
       if (!saved) return;
-
       try {
         const data = JSON.parse(saved);
-        // podrías leer data.step3 si más adelante guardas algo aquí
+        // mostrar preview si el usuario ya subió algo antes (opcional)
+        const previewImg = document.getElementById('previewImg');
+        if (previewImg && data.step3 && data.step3.logoDataUrl) {
+          previewImg.src = data.step3.logoDataUrl;
+          document.getElementById('previewWrap').classList.remove('hidden');
+        }
       } catch(e){ /* ignore */ }
     });
 
-    // Navegar atrás guardando descripción si la hubiera (no requerida aquí)
-    function goToStep2(){
-      // si quisieras, guarda algo en employerRegistration.step3 antes:
-      // const saved = localStorage.getItem('employerRegistration');
-      // let data = saved ? JSON.parse(saved) : {};
-      // data.step3 = { hasLogo: !!document.getElementById('previewImg').src };
-      // localStorage.setItem('employerRegistration', JSON.stringify(data));
-      window.location.href = '/register/employer/step2';
+    // Enviar registro completo de empresa al backend
+    async function finishEmployer(){
+      const saved = localStorage.getItem('employerRegistration');
+      if (!saved) {
+        alert('No hay datos guardados del registro. Completa los pasos anteriores.');
+        window.location.href = '/register/employer/step1';
+        return;
+      }
+      let data;
+      try { data = JSON.parse(saved); } catch(e){ alert('Datos inválidos en el registro'); return; }
+
+      // Construir FormData según API
+      const fd = new FormData();
+      fd.append('email', data.email || '');
+      fd.append('password', data.password || '');
+      // nombre_empresa en el backend
+      fd.append('nombre_empresa', data.nombreEmpresa || data.nombreEmpresa || '');
+      fd.append('ruc', data.ruc || '');
+      // categoría y descripción vienen en step2
+      const step2 = data.step2 || {};
+      fd.append('categoria', step2.categoria || '');
+      fd.append('descripcion', step2.descripcion || '');
+
+      // Adjuntar logo si el input tiene archivo
+      const logoInput = document.getElementById('logoFile');
+      if (logoInput && logoInput.files && logoInput.files[0]) {
+        fd.append('logo', logoInput.files[0]);
+      }
+
+      // Feedback mínimo
+      const btn = event?.target;
+      try {
+        const res = await fetch('/api/register_employer/', { method: 'POST', body: fd });
+        const resJson = await res.json().catch(()=> ({}));
+        if (!res.ok) {
+          alert(resJson.detail || 'Error registrando la empresa: ' + (resJson.message || res.status));
+          return;
+        }
+        // éxito: limpiar y redirigir a login
+        localStorage.removeItem('employerRegistration');
+        alert('Empresa registrada exitosamente. Ahora puedes iniciar sesión.');
+        window.location.href = '/login';
+      } catch (err) {
+        console.error('Error al registrar empresa:', err);
+        alert('Error de conexión al registrar la empresa. Reintenta.');
+      }
     }
 
-    // Finalizar (por ahora, ir al inicio como en empleado)
-    function finishEmployer(){
-      // Aquí podrías enviar a API. Por ahora, coherente con empleado:
-      window.location.href = '/';
-    }
-
-    // Preview simple del logo
+    // Preview simple del logo (igual que antes)
     const fileInput = document.getElementById('logoFile');
     const dropzone = document.getElementById('dropzone');
     const previewWrap = document.getElementById('previewWrap');
     const previewImg = document.getElementById('previewImg');
 
-    fileInput.addEventListener('change', (e) => {
-      const f = e.target.files && e.target.files[0];
-      if (!f) return;
-      if (!f.type.startsWith('image/')) return;
+    if (fileInput) {
+      fileInput.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        if (!f.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          previewImg.src = ev.target.result;
+          previewWrap.classList.remove('hidden');
+        };
+        reader.readAsDataURL(f);
+      });
+    }
 
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        previewImg.src = ev.target.result;
-        previewWrap.classList.remove('hidden');
-      };
-      reader.readAsDataURL(f);
-    });
-
-    // Opcional: estilos de arrastrar y soltar
     ;['dragenter','dragover'].forEach(evt =>
       dropzone.addEventListener(evt, (e)=>{ e.preventDefault(); dropzone.classList.add('bg-[#fff0f5]'); })
     );
