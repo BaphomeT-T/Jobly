@@ -380,7 +380,7 @@ async def register_employer(
     email: str = Form(...),
     password: str = Form(...),
     nombre_empresa: str = Form(...),
-    ruc: str = Form(""),
+    ruc: str = Form(...),  # ahora obligatorio
     categoria: str = Form(""),
     descripcion: str = Form(""),
     logo: UploadFile | None = File(None)
@@ -389,14 +389,14 @@ async def register_employer(
     if conn is None:
         raise HTTPException(status_code=500, detail="Error de conexión a la DB")
 
-    # Validaciones básicas
+    # Validaciones básicas: email, password y RUC obligatorio/formato
     if not is_valid_email(email):
         raise HTTPException(status_code=400, detail="Email inválido.")
     if not is_valid_password(password):
         raise HTTPException(status_code=400, detail="La contraseña debe tener mínimo 8 caracteres, al menos una letra, una mayúscula y un número.")
-    if ruc:
-        if not is_valid_ruc_ec(ruc):
-            raise HTTPException(status_code=400, detail="RUC inválido. Debe ser 13 dígitos y comenzar con código de provincia válido (01-24).")
+    # RUC ahora requerido y validado
+    if not ruc or not is_valid_ruc_ec(ruc):
+        raise HTTPException(status_code=400, detail="RUC inválido. Debe ser 13 dígitos y comenzar con código provincial válido (01-24).")
 
     # Verificar duplicados antes de insertar
     try:
@@ -404,10 +404,9 @@ async def register_employer(
             cur.execute("SELECT 1 FROM USUARIO WHERE Email = %s LIMIT 1;", (email,))
             if cur.fetchone():
                 raise HTTPException(status_code=400, detail="Email ya registrado.")
-            if ruc:
-                cur.execute("SELECT 1 FROM EMPRESA WHERE RUC = %s LIMIT 1;", (ruc,))
-                if cur.fetchone():
-                    raise HTTPException(status_code=400, detail="RUC ya registrado.")
+            cur.execute("SELECT 1 FROM EMPRESA WHERE RUC = %s LIMIT 1;", (ruc,))
+            if cur.fetchone():
+                raise HTTPException(status_code=400, detail="RUC ya registrado.")
     finally:
         # no cerramos la conexión aquí, se usa luego
         pass
@@ -593,8 +592,8 @@ async def home_empresa():
 
 
 # ===== Validadores (necesarios para endpoints) =====
+import re
 EMAIL_REGEX = re.compile(r"^[\w\.-]+@[\w\.-]+\.\w{2,}$")
-#PASSWORD_REGEX = re.compile(r"^(?=.*[A-Z])(?=.*[a-zA-Z])(?=.*\d).{8,}$")  # <-- removed usage
 # RUC Ecuador (simplificado): 13 dígitos, provincia 01-24
 RUC_EC_REGEX = re.compile(r"^(?:0[1-9]|1[0-9]|2[0-4])\d{11}$")
 
