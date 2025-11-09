@@ -64,7 +64,7 @@
     </div>
     
     <!-- Tab 3: Actividades -->
-    <div class="flex flex-col gap-[14px] items-center justify-center max-w-[130px] cursor-pointer tab-item" data-tab="actividades" onclick="window.location.href='/actividades'">
+    <div class="flex flex-col gap-[14px] items-center justify-center max-w-[130px] cursor-pointer tab-item" data-tab="actividades" onclick="window.location.href='/home-empresa'">
       <p class="text-[#606261] text-[20px] font-medium text-center leading-[1.2] whitespace-nowrap tab-text">Actividades</p>
       <div class="w-full h-[3px] bg-transparent tab-line"></div>
     </div>
@@ -220,8 +220,8 @@
             <p class="text-[#333434] text-[16px] font-medium leading-[1.9] w-[70px]">${mapEstado(vacante.estado)}</p>
           </div>
           
-          <!-- More Icon -->
-          <svg class="w-6 h-6 shrink-0 cursor-pointer" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- More Icon with Edit Link -->
+          <svg class="w-6 h-6 shrink-0 cursor-pointer hover:opacity-70 transition-opacity" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="window.location.href='/editar-vacante?id=${vacante.id_vacante}'">
             <circle cx="12" cy="6" r="1.5" fill="#333434"/>
             <circle cx="12" cy="12" r="1.5" fill="#333434"/>
             <circle cx="12" cy="18" r="1.5" fill="#333434"/>

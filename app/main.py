@@ -135,6 +135,11 @@ async def realizar_vacante():
 async def ver_vacantes():
     return _serve_static_html("ver-vacantes.html", "Ver Vacantes")
 
+# Ruta para editar vacante (empresa)
+@app.get("/editar-vacante", response_class=HTMLResponse)
+async def editar_vacante():
+    return _serve_static_html("editar-vacante.html", "Editar Vacante")
+
 # API: Obtener vacantes de una empresa por email
 @app.get("/api/vacantes/empresa")
 async def get_vacantes_empresa(request: Request, email: str | None = None):
@@ -457,6 +462,13 @@ class VacanteCreate(BaseModel):
     # Para identificar a qué empresa pertenece la vacante:
     empresa_email: str  # email del USUARIO dueño de la EMPRESA
 
+class VacanteUpdate(BaseModel):
+    titulo: str | None = None
+    descripcion: str | None = None
+    salario: float | None = None
+    modalidad: str | None = None
+    estado: str | None = None  # Borrador, Publicada, Cerrada
+
 @app.post("/api/vacantes/")
 async def crear_vacante(data: VacanteCreate):
     """
@@ -498,6 +510,184 @@ async def crear_vacante(data: VacanteCreate):
         conn.rollback()
         print("Error crear_vacante:", e)
         raise HTTPException(status_code=500, detail="Error interno creando la vacante")
+    finally:
+        conn.close()
+
+
+@app.get("/api/vacantes/{id_vacante}")
+async def get_vacante_by_id(id_vacante: int, request: Request):
+    """
+    Obtiene los datos de una vacante específica por su ID.
+    Verifica que la vacante pertenezca a la empresa del usuario autenticado.
+    """
+    # Get user from session
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    if not session_user or not isinstance(session_user, dict):
+        raise HTTPException(status_code=401, detail="No autenticado")
+    
+    session_email = session_user.get("email")
+    if not session_email:
+        raise HTTPException(status_code=401, detail="No autenticado")
+
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            # Get empresa ID from session email
+            cur.execute("""
+                SELECT e.ID_Empresa
+                FROM EMPRESA e
+                JOIN USUARIO u ON e.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s
+                LIMIT 1;
+            """, (session_email,))
+            empresa = cur.fetchone()
+            
+            if not empresa:
+                raise HTTPException(status_code=404, detail="Empresa no encontrada")
+            
+            id_empresa = empresa["id_empresa"]
+            
+            # Get vacancy data and verify ownership
+            cur.execute("""
+                SELECT 
+                    ID_Vacante,
+                    Titulo,
+                    Descripcion,
+                    Salario,
+                    Modalidad,
+                    Estado,
+                    Fecha_Creacion
+                FROM VACANTE
+                WHERE ID_Vacante = %s AND FK_ID_Empresa = %s
+                LIMIT 1;
+            """, (id_vacante, id_empresa))
+            
+            vacante = cur.fetchone()
+            
+            if not vacante:
+                raise HTTPException(status_code=404, detail="Vacante no encontrada o no autorizada")
+            
+            return {
+                "id_vacante": vacante["id_vacante"],
+                "titulo": vacante["titulo"],
+                "descripcion": vacante["descripcion"],
+                "salario": float(vacante["salario"]) if vacante["salario"] else None,
+                "modalidad": vacante["modalidad"],
+                "estado": vacante["estado"],
+                "fecha_creacion": vacante["fecha_creacion"].isoformat() if vacante["fecha_creacion"] else None
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error get_vacante_by_id: {e}")
+        raise HTTPException(status_code=500, detail="Error interno obteniendo la vacante")
+    finally:
+        conn.close()
+
+
+@app.put("/api/vacantes/{id_vacante}")
+async def update_vacante(id_vacante: int, data: VacanteUpdate, request: Request):
+    """
+    Actualiza una vacante existente.
+    Verifica que la vacante pertenezca a la empresa del usuario autenticado.
+    """
+    # Get user from session
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    if not session_user or not isinstance(session_user, dict):
+        raise HTTPException(status_code=401, detail="No autenticado")
+    
+    session_email = session_user.get("email")
+    if not session_email:
+        raise HTTPException(status_code=401, detail="No autenticado")
+
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            # Get empresa ID from session email
+            cur.execute("""
+                SELECT e.ID_Empresa
+                FROM EMPRESA e
+                JOIN USUARIO u ON e.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s
+                LIMIT 1;
+            """, (session_email,))
+            empresa = cur.fetchone()
+            
+            if not empresa:
+                raise HTTPException(status_code=404, detail="Empresa no encontrada")
+            
+            id_empresa = empresa["id_empresa"]
+            
+            # Verify vacancy ownership
+            cur.execute("""
+                SELECT ID_Vacante
+                FROM VACANTE
+                WHERE ID_Vacante = %s AND FK_ID_Empresa = %s
+                LIMIT 1;
+            """, (id_vacante, id_empresa))
+            
+            if not cur.fetchone():
+                raise HTTPException(status_code=404, detail="Vacante no encontrada o no autorizada")
+            
+            # Build dynamic update query based on provided fields
+            update_fields = []
+            params = []
+            
+            if data.titulo is not None:
+                update_fields.append("Titulo = %s")
+                params.append(data.titulo)
+            
+            if data.descripcion is not None:
+                update_fields.append("Descripcion = %s")
+                params.append(data.descripcion)
+            
+            if data.salario is not None:
+                update_fields.append("Salario = %s")
+                params.append(data.salario)
+            
+            if data.modalidad is not None:
+                update_fields.append("Modalidad = %s")
+                params.append(data.modalidad)
+            
+            if data.estado is not None:
+                # Validate estado
+                if data.estado not in ['Borrador', 'Publicada', 'Cerrada']:
+                    raise HTTPException(status_code=400, detail="Estado inválido")
+                update_fields.append("Estado = %s")
+                params.append(data.estado)
+            
+            if not update_fields:
+                raise HTTPException(status_code=400, detail="No hay campos para actualizar")
+            
+            # Add vacancy ID to params
+            params.append(id_vacante)
+            
+            # Execute update
+            query = f"""
+                UPDATE VACANTE
+                SET {', '.join(update_fields)}
+                WHERE ID_Vacante = %s
+                RETURNING ID_Vacante;
+            """
+            
+            cur.execute(query, params)
+            conn.commit()
+            
+            logger.info(f"Vacante {id_vacante} actualizada exitosamente")
+            return {"message": "Vacante actualizada exitosamente", "id_vacante": id_vacante}
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error update_vacante: {e}")
+        raise HTTPException(status_code=500, detail="Error interno actualizando la vacante")
     finally:
         conn.close()
 
