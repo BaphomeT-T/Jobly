@@ -252,16 +252,24 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // Validación salario decimal
+    // Validación salario (más tolerante)
     const raw = (salarioInput.value || '').trim().replace(',', '.');
-    const decimalRegex = /^\d+(?:\.\d{1,2})?$/;
-    if (!decimalRegex.test(raw)) {
+    // permitir enteros y decimales hasta 2 posiciones
+    const parsed = Number(raw);
+    if (!raw || !isFinite(parsed) || parsed < 0) {
+      errorEl.classList.remove('hidden');
+      salarioInput.focus();
+      return;
+    }
+    // comprobar máximo 2 decimales si hay parte decimal
+    const parts = raw.split('.');
+    if (parts.length > 1 && parts[1].length > 2) {
       errorEl.classList.remove('hidden');
       salarioInput.focus();
       return;
     }
     errorEl.classList.add('hidden');
-    const salarioNumber = parseFloat(raw);
+    const salarioNumber = parsed;
 
     // Campos
     const titulo = document.querySelector('input[name="titulo"]').value.trim();
