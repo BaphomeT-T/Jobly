@@ -44,11 +44,6 @@
       <button id="logoutBtn" class="border border-[#141514] text-[#141514] px-3 py-1 rounded-[24px] text-sm font-semibold hover:bg-[#141514] hover:text-white transition-colors">
         Cerrar sesión
       </button>
-
-      <!-- Filters button -->
-      <button id="filterBtn" title="Filtros" class="border border-[#cfd4d1] px-3 py-1 rounded-[24px] text-sm font-medium hover:bg-[#f5f5f5]">
-        Filtros
-      </button>
     </div>
   </header>
 
@@ -140,25 +135,39 @@
   <script>
   // Filter modal controls and filtering logic
   (function(){
-    const filterBtn = document.getElementById('filterBtn');
-    const filterModal = document.getElementById('filterModal');
-    const closeFilters = document.getElementById('closeFilters');
-    const applyFilters = document.getElementById('applyFilters');
-    const clearFilters = document.getElementById('clearFilters');
-    const activitiesContainer = document.getElementById('activitiesContainer');
-    const activitiesMessage = document.getElementById('activitiesMessage');
-
-    let allVacantes = []; // cached vacantes
-
-    filterBtn?.addEventListener('click', () => {
-      filterModal.classList.remove('hidden');
-      filterModal.classList.add('flex');
-    });
-    closeFilters?.addEventListener('click', () => {
-      filterModal.classList.add('hidden');
-      filterModal.classList.remove('flex');
-    });
-
+     // no dependemos de botones concretos: abrimos modal cuando se clickea el SVG de filtros indicado por el usuario
+    const filterBtn = document.getElementById('filterBtn'); // legacy/safety (no usado normalmente)
+     const filterModal = document.getElementById('filterModal');
+     const closeFilters = document.getElementById('closeFilters');
+     const applyFilters = document.getElementById('applyFilters');
+     const clearFilters = document.getElementById('clearFilters');
+     const activitiesContainer = document.getElementById('activitiesContainer');
+     const activitiesMessage = document.getElementById('activitiesMessage');
+ 
+     let allVacantes = []; // cached vacantes
+ 
+     function openFilterModal(){
+       if(!filterModal) return;
+       filterModal.classList.remove('hidden');
+       filterModal.classList.add('flex');
+     }
+     // Delegated click listener: si el SVG clickeado coincide con el icono de filtros (patrón del path/elementos),
+     // abrimos el modal. Esto evita tocar la estética y funciona donde esté ese SVG.
+     document.addEventListener('click', (ev) => {
+       const svg = ev.target.closest && ev.target.closest('svg');
+       if (!svg) return;
+       const outer = (svg.outerHTML || '').replace(/\s+/g, ' ');
+       // detectores simples: parte del 'd' del path que nos diste y la presencia de los círculos
+       if (outer.includes('M3 7h6') && outer.includes('circle cx="9.5"') && outer.includes('circle cx="6.5"')) {
+         ev.preventDefault();
+         openFilterModal();
+       }
+     });
+     closeFilters?.addEventListener('click', () => {
+       filterModal.classList.add('hidden');
+       filterModal.classList.remove('flex');
+     });
+ 
     clearFilters?.addEventListener('click', () => {
       document.getElementById('dateFrom').value = '';
       document.getElementById('dateTo').value = '';
@@ -167,7 +176,7 @@
       // show all
       renderVacantes(allVacantes);
     });
-
+ 
     applyFilters?.addEventListener('click', async () => {
       // ensure we have vacantes
       if (!allVacantes.length) {
@@ -177,7 +186,7 @@
       const to = document.getElementById('dateTo').value;
       const estados = Array.from(document.querySelectorAll('.estadoChk:checked')).map(i=>i.value);
       const modalidades = Array.from(document.querySelectorAll('.modalidadChk:checked')).map(i=>i.value);
-
+ 
       const filtered = allVacantes.filter(v => {
         // fecha filter
         if (from) {
@@ -198,12 +207,12 @@
         }
         return true;
       });
-
+ 
       renderVacantes(filtered);
       filterModal.classList.add('hidden');
       filterModal.classList.remove('flex');
     });
-
+ 
     async function fetchVacantes(){
       try {
         const res = await fetch('/api/vacantes/empresa');
@@ -218,7 +227,7 @@
         console.error('Error fetching vacantes:', e);
       }
     }
-
+ 
     function renderVacantes(list){
       // clear container and render simple list
       activitiesContainer.innerHTML = '';
@@ -246,12 +255,12 @@
       });
       activitiesContainer.appendChild(ul);
     }
-
+ 
     function escapeHtml(str) {
       if (!str) return '';
       return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
     }
-
+ 
     // initial fetch to populate (only on company home; safe if API returns empty)
     fetchVacantes();
   })();
