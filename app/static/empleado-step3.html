@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <base href="/">
+  <title>Registro Candidato - Paso 3 - Jobly</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>body{font-family:'Poppins',sans-serif;}</style>
+</head>
+<body class="bg-white min-h-screen font-[Poppins,sans-serif]">
+  <!-- Header -->
+  <header class="flex items-center justify-between px-[30px] pt-[24px] pb-[16px] border-b border-[#e5eae8] h-[86px]">
+    <a href="/" class="block h-[62px] w-[172px]">
+      <img src="/static/images/logo-login.png" alt="Jobly Logo" class="h-full w-full object-contain" />
+    </a>
+    <div class="flex items-center gap-4">
+      <div class="h-6 w-px bg-[#e5eae8]"></div>
+    </div>
+  </header>
+
+  <!-- Subheader patterns -->
+  <section class="flex gap-[64px] items-end justify-center px-[108px] pt-[16px] pb-0 border-b border-[#e5eae8] relative">
+    <div class="flex flex-col gap-[16px] items-center justify-center">
+      <p class="text-[#606261] text-[20px] font-medium text-right"> </p>
+      <img src="/static/images/line-divider.png" alt="Subheader Icon" class="h-0 w-full" />
+    </div>
+    <div class="absolute bottom-0 left-[78px] top-0 w-[127px] opacity-10 pointer-events-none">
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-5.51%] top-[-71.43%] w-[105.51%]" />
+    </div>
+    <div class="absolute bottom-0 left-[198px] top-0 w-[84px] opacity-10 pointer-events-none">
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-7.14%] top-[-71.43%] w-[159.52%]" />
+    </div>
+    <div class="absolute bottom-0 right-[129px] top-0 w-[58px] opacity-10 pointer-events-none">
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-58.62%] top-[-71.43%] w-[231.03%]" />
+    </div>
+    <div class="absolute bottom-0 right-0 top-0 w-[127px] opacity-10 pointer-events-none">
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-5.51%] top-[-71.43%] w-[105.51%]" />
+    </div>
+  </section>
+
+  <!-- Decorative people bottom-right -->
+  <div class="fixed right-[108px] bottom-0 w-[520px] max-w-[45vw] pointer-events-none z-0">
+    <img src="/static/images/employer-step1-people.png" alt="Decoración" class="w-full h-auto" />
+  </div>
+
+  <!-- Main content -->
+  <main class="flex flex-col items-center justify-start px-4 py-12 relative z-10">
+    <div class="w-full max-w-[600px]">
+      <!-- Top row: back + title + save/exit -->
+      <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center gap-4">
+          <button onclick='window.location.href="/register/empleado/step2"' class="w-6 h-6 flex items-center justify-center" aria-label="Volver">
+            <img src="/static/images/arrow-back.png" alt="Volver" class="w-full h-full" />
+          </button>
+          <h1 class="text-[32px] font-semibold text-black leading-[1.2] capitalize">Foto De Perfil</h1>
+        </div>
+        <button 
+        type="button" 
+        onclick="window.location.href='/'" 
+        class="text-[16px] font-semibold tracking-[0.48px] text-[#141514]">
+        Save And Exit
+        </button>
+
+      </div>
+
+      <!-- Subtitle -->
+      <p class="text-[20px] font-medium text-[#767977] leading-[1.5] mb-4">Es opcional.</p>
+
+     <!-- Progress bar: final step full -->
+        <div class="w-[600px] h-2 bg-[#e5eae8] rounded-[16px] mb-10 relative">
+        <div class="absolute left-0 top-0 h-2 w-[600px] bg-[#3b1329] rounded-[16px]"></div>
+        </div>
+
+      <!-- Upload Image block (from Figma node 7021:18255) -->
+      <div class="flex flex-col gap-2 mb-8">
+        <label for="profileImage" class="text-[14px] font-semibold text-[#141514] tracking-[0.42px]">Upload Image</label>
+        <!-- Dropzone-like area with hidden input overlay -->
+        <label class="relative block border border-[#cfd4d1] rounded-[4px] h-[152px] p-4 text-[#333434] text-[12px] font-medium leading-[1.9]">
+          Drop or upload your file
+          <input id="profileImage" name="profileImage" type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" />
+        </label>
+        <div class="flex items-center gap-1 text-[#606261] text-[12px]">
+          <!-- Information icon -->
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" stroke="#CFD4D1" stroke-width="1.5"/>
+            <path d="M12 17v-5" stroke="#606261" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="12" cy="8" r="1" fill="#606261"/>
+          </svg>
+          <span class="font-medium">you should select one item.</span>
+        </div>
+      </div>
+
+      <!-- Continue button -->
+      <div class="pt-4">
+        <button type="button" onclick="finishCandidateRegistration()" class="bg-[#f23e8e] text-[#13060e] px-6 py-3 rounded-full font-semibold text-[16px] h-[48px] hover:bg-[#d93578] transition-colors">Continue</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function finishCandidateRegistration(){
+      console.log('Iniciando registro de candidato...');
+      
+      // 1. Cargar datos de localStorage
+      const saved = localStorage.getItem('candidateRegistration');
+      if (!saved) {
+        alert('No hay datos de registro previos. Por favor completa los pasos anteriores.');
+        window.location.href = '/register/empleado/step1';
+        return;
+      }
+      
+      let data;
+      try {
+        data = JSON.parse(saved);
+        console.log('Datos recuperados:', data);
+      } catch(e) {
+        console.error('Error parseando datos:', e);
+        alert('Error al leer los datos guardados.');
+        return;
+      }
+
+      // 2. Obtener archivos de paso 2 (CV) y paso 3 (foto perfil)
+      const cvFile = localStorage.getItem('candidateCV') 
+        ? dataURItoFile(localStorage.getItem('candidateCV'), 'cv.pdf')
+        : null;
+      
+      const fotoInput = document.getElementById('profileImage');
+      const fotoFile = fotoInput && fotoInput.files && fotoInput.files[0] 
+        ? fotoInput.files[0] 
+        : null;
+
+      console.log('CV file:', cvFile ? 'presente' : 'ausente');
+      console.log('Foto file:', fotoFile ? 'presente' : 'ausente');
+
+      // 3. Construir FormData
+      const formData = new FormData();
+      formData.append('email', data.email || '');
+      formData.append('password', data.password || '');
+      formData.append('nombre_completo', `${data.nombre || ''} ${data.apellido || ''}`.trim());
+      
+      if (cvFile) {
+        formData.append('cv', cvFile);
+      }
+      if (fotoFile) {
+        formData.append('foto', fotoFile);
+      }
+
+      console.log('FormData preparado, enviando al servidor...');
+
+      // 4. Enviar a backend
+      try {
+        const response = await fetch('/api/register_candidate/', {
+          method: 'POST',
+          body: formData
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          let errorData;
+          try {
+            errorData = await response.json();
+          } catch(e) {
+            errorData = { detail: 'Error desconocido del servidor' };
+          }
+          console.error('Error del servidor:', errorData);
+          alert('Error: ' + (errorData.detail || 'No se pudo completar el registro'));
+          return;
+        }
+        
+        const result = await response.json();
+        console.log('Registro exitoso:', result);
+        
+        // 5. Limpiar localStorage y redirigir a login
+        localStorage.removeItem('candidateRegistration');
+        localStorage.removeItem('candidateCV');
+        alert('¡Registro completado exitosamente! Ahora puedes iniciar sesión.');
+        window.location.href = '/login';
+        
+      } catch(error) {
+        console.error('Error completo:', error);
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        alert('Error de conexión. Por favor verifica que el servidor esté ejecutándose.\n\nDetalles: ' + error.message);
+      }
+    }
+
+    // Función auxiliar para convertir dataURI a File
+    function dataURItoFile(dataURI, filename) {
+      try {
+        const arr = dataURI.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while(n--){
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr], filename, {type: mime});
+      } catch(e) {
+        console.error('Error convirtiendo archivo:', e);
+        return null;
+      }
+    }
+  </script>
+</body>
+</html>

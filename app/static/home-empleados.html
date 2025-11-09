@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobly - Home Empleados</title>
+    <base href="/">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="home-empleados">
+    <!-- Header -->
+    <header class="header">
+        <img src="/static/images/home-empleados-logo.png" alt="Jobly Logo" class="header-logo">
+        <div class="header-icons">
+            <svg class="header-icon icon-question-circle" viewBox="0 0 24 24" fill="none">
+                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2"/>
+                <path d="M9.09 9C9.3251 8.33167 9.78915 7.76811 10.4 7.40913C11.0108 7.05016 11.7289 6.91894 12.4272 7.03871C13.1255 7.15849 13.7588 7.52152 14.2151 8.06353C14.6713 8.60553 14.9211 9.29152 14.92 10C14.92 12 11.92 13 11.92 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="17" r="0.5" fill="currentColor" stroke="currentColor"/>
+            </svg>
+            <svg class="header-icon icon-envelope" viewBox="0 0 24 24" fill="none">
+                <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M22 6L12 13L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg class="header-icon icon-bell" viewBox="0 0 24 24" fill="none">
+                <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg class="header-icon icon-user-circle" viewBox="0 0 24 24" fill="none">
+                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 15C14.2091 15 16 13.2091 16 11C16 8.79086 14.2091 7 12 7C9.79086 7 8 8.79086 8 11C8 13.2091 9.79086 15 12 15Z" stroke="currentColor" stroke-width="2"/>
+                <path d="M5.98 19.96C6.54535 18.7471 7.44084 17.7167 8.56 16.98C9.67916 16.2433 10.9817 15.8428 12.315 15.8214C13.6483 15.8 14.9626 16.1584 16.1044 16.8589C17.2462 17.5594 18.1699 18.5718 18.77 19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="header-divider"></div>
+        </div>
+    </header>
+
+    <!-- Subheader -->
+    <div class="subheader">
+        <div class="subheader-tab active">
+            <p>OPC1</p>
+            <div class="subheader-tab-line"></div>
+        </div>
+        <div class="subheader-tab">
+            <p>OPC2</p>
+            <div class="subheader-tab-line"></div>
+        </div>
+        <div class="subheader-tab">
+            <p>OPC3</p>
+            <div class="subheader-tab-line"></div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-bar">
+        <input type="text" class="search-input" placeholder="Junior / Intern Position">
+        <div class="search-divider"></div>
+        <div class="search-location">
+            <svg class="search-location-icon icon-location-pin" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z"/>
+            </svg>
+            <span class="search-location-text">Location</span>
+        </div>
+        <button class="search-button">
+            <svg class="search-button-icon icon-search" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="recent-activities">
+        <p>Recent Activities</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Job Cards Column -->
+        <div class="job-cards-column">
+            <!-- Featured Job Card -->
+            <div class="job-card featured">
+                <div class="job-card-header">
+                    <div class="job-card-company">
+                        <img src="/static/images/company-meta.png" alt="META Company" class="job-card-company-logo">
+                        <span class="job-card-company-name">META Company</span>
+                    </div>
+                    <svg class="job-card-bookmark icon-bookmark" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 21L12 16L5 21V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H17C17.5304 3 18.0391 3.21071 18.4142 3.58579C18.7893 3.96086 19 4.46957 19 5V21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="job-card-details">
+                    <h3 class="job-card-title">Product Designer</h3>
+                    <p class="job-card-location">
+                        <span class="city">Porto,</span>
+                        <span class="country"> Portugal </span>
+                        <span class="type">(on Site)</span>
+                    </p>
+                </div>
+                <div class="job-card-chips">
+                    <div class="chip easy-apply">Easy Apply</div>
+                    <div class="chip multiple-candidate">Multiple Candidate</div>
+                </div>
+                <div class="job-card-time">1d</div>
+            </div>
+
+            <!-- Regular Job Cards -->
+            <div class="job-card">
+                <div class="job-card-header">
+                    <div class="job-card-company">
+                        <img src="/static/images/company-fatima.png" alt="FATIMA company" class="job-card-company-logo">
+                        <span class="job-card-company-name">FATIMA company</span>
+                    </div>
+                    <svg class="job-card-bookmark icon-bookmark icon-bookmark-filled" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 21L12 16L5 21V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H17C17.5304 3 18.0391 3.21071 18.4142 3.58579C18.7893 3.96086 19 4.46957 19 5V21Z"/>
+                    </svg>
+                </div>
+                <div class="job-card-details">
+                    <h3 class="job-card-title">Service Designer</h3>
+                    <p class="job-card-location">
+                        <span class="type">(Remote)</span>
+                    </p>
+                </div>
+                <div class="job-card-chips">
+                    <div class="chip easy-apply">Easy Apply</div>
+                    <div class="chip multiple-candidate">Multiple Candidate</div>
+                </div>
+                <div class="job-card-time">2d</div>
+            </div>
+
+            <div class="job-card">
+                <div class="job-card-header">
+                    <div class="job-card-company">
+                        <img src="/static/images/company-nava.png" alt="NAVA company" class="job-card-company-logo">
+                        <span class="job-card-company-name">NAVA company</span>
+                    </div>
+                    <svg class="job-card-bookmark icon-bookmark" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 21L12 16L5 21V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H17C17.5304 3 18.0391 3.21071 18.4142 3.58579C18.7893 3.96086 19 4.46957 19 5V21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="job-card-details">
+                    <h3 class="job-card-title">Product Designer</h3>
+                    <p class="job-card-location">
+                        <span class="city">Bonn,</span>
+                        <span class="country"> Germany</span>
+                        <span class="type"> (on Site)</span>
+                    </p>
+                </div>
+                <div class="job-card-chips">
+                    <div class="chip easy-apply">Easy Apply</div>
+                </div>
+                <div class="job-card-time">1d</div>
+            </div>
+
+            <div class="job-card">
+                <div class="job-card-header">
+                    <div class="job-card-company">
+                        <img src="/static/images/company-najime.png" alt="NAJIME company" class="job-card-company-logo">
+                        <span class="job-card-company-name">NAJIME company</span>
+                    </div>
+                    <svg class="job-card-bookmark icon-bookmark" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 21L12 16L5 21V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H17C17.5304 3 18.0391 3.21071 18.4142 3.58579C18.7893 3.96086 19 4.46957 19 5V21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="job-card-details">
+                    <h3 class="job-card-title">UI Designer</h3>
+                    <p class="job-card-location">
+                        <span class="type">Remote</span>
+                    </p>
+                </div>
+                <div class="job-card-chips">
+                    <div class="chip multiple-candidate">Multiple Candidate</div>
+                </div>
+                <div class="job-card-time">1d</div>
+            </div>
+        </div>
+
+        <!-- Job Detail Panel -->
+        <div class="job-detail">
+            <div class="job-detail-header-section">
+                <div class="job-detail-top">
+                    <div class="job-detail-header">
+                        <div class="job-detail-company-info">
+                            <div class="job-detail-company">
+                                <img src="/static/images/company-profile.png" alt="Meta Company" class="job-detail-company-logo">
+                                <span class="job-detail-company-name">Meta Company</span>
+                            </div>
+                            <div class="job-detail-info">
+                                <h1 class="job-detail-title">Product Designer</h1>
+                                <p class="job-detail-location">
+                                    Porto, Portugal <span class="job-detail-location-type">(on Site)</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="job-detail-actions">
+                            <div class="job-detail-icons">
+                                <svg class="job-detail-icon icon-favourite" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20.84 4.61C20.3292 4.099 19.7228 3.69365 19.0554 3.41708C18.3879 3.14052 17.6725 2.99818 16.95 2.99818C16.2275 2.99818 15.5121 3.14052 14.8446 3.41708C14.1772 3.69365 13.5708 4.099 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.57831 8.50903 2.99871 7.05 2.99871C5.59096 2.99871 4.19169 3.57831 3.16 4.61C2.1283 5.64169 1.54871 7.04096 1.54871 8.5C1.54871 9.95903 2.1283 11.3583 3.16 12.39L4.22 13.45L12 21.23L19.78 13.45L20.84 12.39C21.351 11.8792 21.7563 11.2728 22.0329 10.6054C22.3095 9.93789 22.4518 9.22248 22.4518 8.5C22.4518 7.77752 22.3095 7.06211 22.0329 6.39462C21.7563 5.72714 21.351 5.12075 20.84 4.61Z"/>
+                                </svg>
+                                <svg class="job-detail-icon icon-expand" viewBox="0 0 24 24" fill="none">
+                                    <path d="M21 3L14 10M21 3V9M21 3H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M3 21L10 14M3 21V15M3 21H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <button class="easy-apply-btn">
+                                <svg class="easy-apply-btn-icon icon-bolt" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"/>
+                                </svg>
+                                <span class="easy-apply-btn-text">Easy Apply</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="job-detail-summary">
+                        <p><span class="job-detail-summary-label">Where you'll do it:</span> <span class="job-detail-summary-text">Maya</span></p>
+                        <p><span class="job-detail-summary-label">The Interview Process:</span> <span class="job-detail-summary-text">It will have 2 stages that include a 45 min HR chat ➡️ 1h Cultural/Technical chat</span></p>
+                        <p><span class="job-detail-summary-label">Tools:</span> <span class="job-detail-summary-text">Figma</span></p>
+                        <p><span class="job-detail-summary-label">Reporting to:</span> <span class="job-detail-summary-text">Design Manager, Bruno Mota</span></p>
+                        <p><span class="job-detail-summary-label">Your team:</span> <span class="job-detail-summary-text">You will mainly be part of a UX Designer's team, working with cross-functional teams and a wider group of UX department</span></p>
+                    </div>
+                </div>
+
+                <div class="job-detail-tabs">
+                    <div class="job-detail-tab active">Job Description</div>
+                    <div class="job-detail-tab">Requirement</div>
+                    <div class="job-detail-tab">Benefit</div>
+                    <div class="job-detail-tab">Overview</div>
+                </div>
+            </div>
+
+            <div class="job-detail-content">
+                <!-- Job Description -->
+                <div class="job-detail-section">
+                    <h2 class="job-detail-section-title">Job Description</h2>
+                    <div class="job-detail-section-content">
+                        <p class="job-detail-subtitle">What will make your journey with us unique?</p>
+                        <ul class="job-detail-list">
+                            <li>A supportive manager who cares about your well-being and is invested in your professional growth.</li>
+                            <li>A culture of continuous learning with clear targets and feedback.</li>
+                            <li>A global company with over 2600 employees located in more than 26 countries, including offices in 3 countries.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- Requirement -->
+                <div class="job-detail-section">
+                    <h2 class="job-detail-section-title">Requirement</h2>
+                    <div class="job-detail-section-content">
+                        <div style="display: flex; flex-direction: column; gap: 32px;">
+                            <div>
+                                <p class="job-detail-subtitle">What will you do</p>
+                                <p class="job-detail-text">As a UX Designer on our team, you will shape user experiences by leading the design of key features and projects. Your responsibilities include defining user experience flows, developing new product concepts, and crafting user stories. You will design detailed UI layouts, create benchmarks, and develop high-fidelity prototypes while documenting UX and UI strategies. Collaborating with technical teams, you will transform designs into impactful, industry-leading products. This role combines creativity and problem-solving to create meaningful user experiences. Your journey with us is an opportunity to drive innovation and make a significant impact.</p>
+                            </div>
+                            <div>
+                                <p class="job-detail-subtitle">What You'll Bring</p>
+                                <ul class="job-detail-list">
+                                    <li>Showcase proficiency in collaborative design environments.</li>
+                                    <li>Demonstrated ability to work independently, think critically, and maintain meticulous attention to detail.</li>
+                                    <li>Solid grasp of interactive elements, micro-interactions, and animations, contributing to a seamless user experience.</li>
+                                    <li>Clear understanding of the entire UX lifecycle, coupled with a track record of designing successful apps and products.</li>
+                                    <li>Deep passion for digital product development and an unwavering commitment to achieving excellence.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- Benefit -->
+                <div class="job-detail-section">
+                    <h2 class="job-detail-section-title">Benefit</h2>
+                    <div class="job-detail-section-content">
+                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                            <div class="benefit-pay-range">
+                                <p class="benefit-pay-title">Base Pay Range</p>
+                                <p>
+                                    <span class="benefit-pay-amount">$50.00- $60.00</span>
+                                    <span class="benefit-pay-period"> per/h</span>
+                                </p>
+                            </div>
+                            <div>
+                                <p class="job-detail-subtitle">What's in it for you?</p>
+                                <ul class="job-detail-list">
+                                    <li>Embrace work-life balance with hybrid/remote roles and flexible hours.</li>
+                                    <li>Enjoy 22 days + Birthday + Carnival Tuesday.</li>
+                                    <li>Participate in team-building activities and events.</li>
+                                    <li>Utilize the best tools and technology for work.</li>
+                                    <li>Stay covered with comprehensive health insurance.</li>
+                                    <li>A huge team of UX designers to learn from.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- Overview -->
+                <div class="job-detail-section">
+                    <h2 class="job-detail-section-title">Overview</h2>
+                    <div class="job-detail-section-content">
+                        <div class="overview-grid">
+                            <div class="overview-column">
+                                <div class="overview-item">
+                                    <span class="overview-label">Size</span>
+                                    <span class="overview-value">510 to 1000 Employees</span>
+                                </div>
+                                <div class="overview-item">
+                                    <span class="overview-label">Type</span>
+                                    <span class="overview-value">Company - Private</span>
+                                </div>
+                                <div class="overview-item">
+                                    <span class="overview-label">Sector</span>
+                                    <span class="overview-value">Financial Service</span>
+                                </div>
+                            </div>
+                            <div class="overview-column">
+                                <div class="overview-item">
+                                    <span class="overview-label">Founded</span>
+                                    <span class="overview-value">1999</span>
+                                </div>
+                                <div class="overview-item">
+                                    <span class="overview-label">Industry</span>
+                                    <span class="overview-value">Financial Transaction</span>
+                                </div>
+                                <div class="overview-item">
+                                    <span class="overview-label">Revenue</span>
+                                    <span class="overview-value">$5 to $25 milion</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overview-images">
+                        <div class="overview-image-main">
+                            <img src="/static/images/overview-img1.png" alt="Office 1">
+                        </div>
+                        <div class="overview-image-grid">
+                            <div class="overview-image-row">
+                                <div class="overview-image-small">
+                                    <img src="/static/images/overview-img2.png" alt="Office 2">
+                                </div>
+                                <div class="overview-image-small">
+                                    <img src="/static/images/overview-img3.png" alt="Office 3">
+                                </div>
+                            </div>
+                            <div class="overview-image-row">
+                                <div class="overview-image-small">
+                                    <img src="/static/images/overview-img4.png" alt="Office 4">
+                                </div>
+                                <div class="overview-image-small">
+                                    <img src="/static/images/overview-img5.png" alt="Office 5">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
