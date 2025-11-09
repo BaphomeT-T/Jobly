@@ -49,7 +49,11 @@
       return /^[\w\.-]+@[\w\.-]+\.\w{2,}$/.test(email);
     }
     function isValidPassword(pw) {
-      return /^(?=.*[A-Z])(?=.*[a-zA-Z])(?=.*\d).{8,}$/.test(pw);
+      if (!pw || pw.length < 8) return false;
+      const hasUpper = /[A-Z]/.test(pw);
+      const hasLower = /[a-z]/.test(pw);
+      const hasDigit = /\d/.test(pw);
+      return hasUpper && hasLower && hasDigit;
     }
 
     form.addEventListener('submit', async (e) => {

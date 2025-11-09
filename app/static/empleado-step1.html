@@ -130,9 +130,24 @@
             const input = document.getElementById('password');
             input.type = input.type === 'password' ? 'text' : 'password';
         }
+        function isValidPassword(pw) {
+            if (!pw || pw.length < 8) return false;
+            const hasUpper = /[A-Z]/.test(pw);
+            const hasLower = /[a-z]/.test(pw);
+            const hasDigit = /\d/.test(pw);
+            return hasUpper && hasLower && hasDigit;
+        }
         function goCandidateStep2(){
             const form = document.getElementById('candidateStep1');
             if(!form.checkValidity()){ form.reportValidity(); return; }
+            // validate password with native UI if needed
+            const pwInput = document.getElementById('password');
+            pwInput.setCustomValidity('');
+            if (!isValidPassword(pwInput.value)) {
+                pwInput.setCustomValidity('La contraseña debe tener mínimo 8 caracteres, al menos una letra, una mayúscula y un número.');
+                pwInput.reportValidity();
+                return;
+            }
             const data = {
                 nombre: document.getElementById('nombre').value,
                 apellido: document.getElementById('apellido').value,

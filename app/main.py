@@ -594,7 +594,7 @@ async def home_empresa():
 
 # ===== Validadores (necesarios para endpoints) =====
 EMAIL_REGEX = re.compile(r"^[\w\.-]+@[\w\.-]+\.\w{2,}$")
-PASSWORD_REGEX = re.compile(r"^(?=.*[A-Z])(?=.*[a-zA-Z])(?=.*\d).{8,}$")
+#PASSWORD_REGEX = re.compile(r"^(?=.*[A-Z])(?=.*[a-zA-Z])(?=.*\d).{8,}$")  # <-- removed usage
 # RUC Ecuador (simplificado): 13 dígitos, provincia 01-24
 RUC_EC_REGEX = re.compile(r"^(?:0[1-9]|1[0-9]|2[0-4])\d{11}$")
 
@@ -605,8 +605,14 @@ def is_valid_email(email: str) -> bool:
         return False
 
 def is_valid_password(pw: str) -> bool:
+    """Comprueba: >=8 chars, al menos 1 mayúscula, 1 minúscula y 1 dígito."""
     try:
-        return bool(pw and PASSWORD_REGEX.match(pw))
+        if not pw or len(pw) < 8:
+            return False
+        has_upper = any(c.isupper() for c in pw)
+        has_lower = any(c.islower() for c in pw)
+        has_digit = any(c.isdigit() for c in pw)
+        return has_upper and has_lower and has_digit
     except Exception:
         return False
 
