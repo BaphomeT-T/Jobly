@@ -108,30 +108,11 @@
     <!-- Modalidad -->
     <div>
     <label class="block text-[16px] font-semibold text-[#141514] tracking-[0.48px] mb-3">Modalidad*</label>
-    <div class="flex flex-wrap gap-4">
-        <button type="button"
-        class="modalidad-btn bg-white border border-[#e5eae8] rounded-full px-4 py-2 hover:border-[#c89bfa] transition-colors"
-        data-value="presencial" data-label="Presencial">
-        <span class="text-[14px] font-medium text-[#141514]">Presencial</span>
-        </button>
-
-        <button type="button"
-        class="modalidad-btn bg-white border border-[#e5eae8] rounded-full px-4 py-2 hover:border-[#c89bfa] transition-colors"
-        data-value="virtual" data-label="Virtual">
-        <span class="text-[14px] font-medium text-[#141514]">Virtual</span>
-        </button>
-
-        <button type="button"
-        class="modalidad-btn bg-white border border-[#e5eae8] rounded-full px-4 py-2 hover:border-[#c89bfa] transition-colors"
-        data-value="hibrido" data-label="Hibrido">
-        <span class="text-[14px] font-medium text-[#141514]">Hibrido</span>
-        </button>
-
-        <button type="button"
-        class="modalidad-btn bg-white border border-[#e5eae8] rounded-full px-4 py-2 hover:border-[#c89bfa] transition-colors"
-        data-value="carretera" data-label="En la carretera">
-        <span class="text-[14px] font-medium text-[#141514]">En la carretera</span>
-        </button>
+    <div id="modalidadGroup" class="flex gap-4">
+      <button type="button" class="modalidad-option px-4 py-2 border rounded" data-value="Presencial">Presencial</button>
+      <button type="button" class="modalidad-option px-4 py-2 border rounded" data-value="Remoto">Remoto</button>
+      <button type="button" class="modalidad-option px-4 py-2 border rounded" data-value="Híbrido">Híbrido</button>
+      <button type="button" class="modalidad-option px-4 py-2 border rounded" data-value="Virtual">Virtual</button>
     </div>
     </div>
 
@@ -187,32 +168,19 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   /* ======== Modalidad: estilo + valor guardado ======== */
-  const modalidadBtns = document.querySelectorAll('.modalidad-btn');
+  const modalidadBtns = document.querySelectorAll('.modalidad-option');
   let modalidadSeleccionada = null;
-
-  // Mapeo a las etiquetas solicitadas
-  const modalidadMap = {
-    presencial: 'Presencial',
-    remoto: 'Virtual',      // <— tu botón dice "Remoto", pero guardaremos "Virtual"
-    hibrido: 'Hibrido',
-    carretera: 'En la carretera'
-  };
 
   // Funciones de estilo
   const setInactive = (btn) => {
     btn.classList.remove('active');
-    btn.classList.remove('bg-[#f2ecfe]', 'border-[#c89bfa]');
-    btn.classList.add('bg-white', 'border', 'border-[#e5eae8]');
-    // quitar icono si existiera
-    const check = btn.querySelector('.check-icon');
-    if (check) check.remove();
+    btn.classList.remove('bg-[#f23e8e]', 'text-white');
+    btn.classList.add('border'); // restablecer estilo si usas Tailwind
   };
 
   const setActive = (btn) => {
     btn.classList.add('active');
-    // Moradito suave al fondo + borde
-    btn.classList.remove('bg-white', 'border-[#e5eae8]');
-    btn.classList.add('bg-[#f2ecfe]', 'border-[#c89bfa]');
+    btn.classList.add('bg-[#f23e8e]', 'text-white');
   };
 
   modalidadBtns.forEach(btn => {
@@ -228,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // guardar el label correcto
       const raw = (btn.dataset.value || '').toLowerCase(); // 'presencial'|'hibrido'|'remoto'|'carretera'
-      modalidadSeleccionada = modalidadMap[raw] || null;
+      modalidadSeleccionada = raw.charAt(0).toUpperCase() + raw.slice(1) || null;
     });
   });
 
