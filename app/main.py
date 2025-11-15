@@ -1341,3 +1341,164 @@ def is_valid_ruc_ec(ruc: str) -> bool:
         return bool(ruc and RUC_EC_REGEX.match(ruc))
     except Exception:
         return False
+
+# ----------------------------------------------------
+# 5. Vacantes públicas y postulaciones (Candidato)
+# ----------------------------------------------------
+
+@app.get("/ver-aplicaciones", response_class=HTMLResponse)
+async def ver_aplicaciones_page():
+    """Página para que el candidato vea vacantes y pueda postular."""
+    return _serve_static_html("Ver-aplicaciones.html", "Ver Aplicaciones")
+
+@app.get("/api/vacantes/publicadas")
+async def listar_vacantes_publicadas(request: Request, search: str | None = None):
+    """Lista todas las vacantes publicadas visibles para candidatos.
+    Opcionalmente filtra por texto en título o nombre de empresa.
+    Incluye conteo de postulaciones actuales."""
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            base_sql = """
+                SELECT v.ID_Vacante, v.Titulo, v.Descripcion, v.Modalidad, v.Estado, v.Fecha_Creacion,
+                       e.Nombre_Empresa,
+                       COUNT(p.ID_Postulacion) AS num_postulaciones
+                FROM VACANTE v
+                JOIN EMPRESA e ON v.FK_ID_Empresa = e.ID_Empresa
+                LEFT JOIN POSTULACION p ON p.FK_ID_Vacante = v.ID_Vacante
+                WHERE v.Estado = 'Publicada'
+            """
+            params = []
+            if search:
+                base_sql += " AND (LOWER(v.Titulo) LIKE %s OR LOWER(e.Nombre_Empresa) LIKE %s)"
+                s = f"%{search.lower()}%"
+                params.extend([s, s])
+            base_sql += " GROUP BY v.ID_Vacante, e.Nombre_Empresa ORDER BY v.Fecha_Creacion DESC"
+            cur.execute(base_sql, params)
+            rows = cur.fetchall() or []
+            vacantes = []
+            for r in rows:
+                vacantes.append({
+                    "id_vacante": r["id_vacante"],
+                    "titulo": r["titulo"],
+                    "descripcion": r["descripcion"],
+                    "modalidad": r["modalidad"],
+                    "estado": r["estado"],
+                    "fecha_creacion": r["fecha_creacion"].isoformat() if r["fecha_creacion"] else None,
+                    "nombre_empresa": r["nombre_empresa"],
+                    "num_postulaciones": r["num_postulaciones"]
+                })
+            return {"vacantes": vacantes}
+    except Exception as e:
+        print("Error listar_vacantes_publicadas:", e)
+        raise HTTPException(status_code=500, detail="Error interno listando vacantes")
+    finally:
+        try: conn.close()
+        except Exception: pass
+
+@app.post("/api/vacantes/{id_vacante}/postular")
+async def postular_a_vacante(id_vacante: int, request: Request):
+    """Permite a un candidato autenticado postular a una vacante publicada."""
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    if not session_user or session_user.get("rol") != "Candidato":
+        raise HTTPException(status_code=401, detail="Solo candidatos pueden postular")
+    email = session_user.get("email")
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            # Obtener ID_Candidato
+            cur.execute("""
+                SELECT c.ID_Candidato
+                FROM USUARIO u
+                JOIN CANDIDATO c ON c.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s
+                LIMIT 1;
+            """, (email,))
+            cand = cur.fetchone()
+            if not cand:
+                raise HTTPException(status_code=404, detail="Perfil de candidato no encontrado")
+            id_cand = cand["id_candidato"]
+            # Validar existencia y estado de la vacante
+            cur.execute("""
+                SELECT Estado FROM VACANTE WHERE ID_Vacante = %s LIMIT 1;
+            """, (id_vacante,))
+            vrow = cur.fetchone()
+            if not vrow or vrow["estado"] != "Publicada":
+                raise HTTPException(status_code=404, detail="Vacante no disponible para postular")
+            # Insertar postulacion (única por candidato/vacante)
+            try:
+                cur.execute("""
+                    INSERT INTO POSTULACION (FK_ID_Candidato, FK_ID_Vacante)
+                    VALUES (%s, %s)
+                    RETURNING ID_Postulacion;
+                """, (id_cand, id_vacante))
+            except psycopg2.errors.UniqueViolation:
+                conn.rollback()
+                raise HTTPException(status_code=400, detail="Ya postulaste a esta vacante")
+            pid = cur.fetchone()["id_postulacion"]
+            conn.commit()
+            return {"message": "Postulación registrada", "id_postulacion": pid}
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        print("Error postular_a_vacante:", e)
+        raise HTTPException(status_code=500, detail="Error interno al postular")
+    finally:
+        try: conn.close()
+        except Exception: pass
+
+@app.get("/api/postulaciones/mias")
+async def listar_postulaciones_candidato(request: Request):
+    """Devuelve las postulaciones del candidato autenticado."""
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    if not session_user or session_user.get("rol") != "Candidato":
+        raise HTTPException(status_code=401, detail="Solo candidatos")
+    email = session_user.get("email")
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("""
+                SELECT c.ID_Candidato
+                FROM USUARIO u
+                JOIN CANDIDATO c ON c.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s
+                LIMIT 1;
+            """, (email,))
+            cand = cur.fetchone()
+            if not cand:
+                raise HTTPException(status_code=404, detail="Candidato no encontrado")
+            id_cand = cand["id_candidato"]
+            cur.execute("""
+                SELECT p.ID_Postulacion, p.Fecha_Postulacion, p.Estado_Proceso,
+                       v.ID_Vacante, v.Titulo, e.Nombre_Empresa
+                FROM POSTULACION p
+                JOIN VACANTE v ON p.FK_ID_Vacante = v.ID_Vacante
+                JOIN EMPRESA e ON v.FK_ID_Empresa = e.ID_Empresa
+                WHERE p.FK_ID_Candidato = %s
+                ORDER BY p.Fecha_Postulacion DESC;
+            """, (id_cand,))
+            rows = cur.fetchall() or []
+            postulaciones = []
+            for r in rows:
+                postulaciones.append({
+                    "id_postulacion": r["id_postulacion"],
+                    "fecha_postulacion": r["fecha_postulacion"].isoformat() if r["fecha_postulacion"] else None,
+                    "estado_proceso": r["estado_proceso"],
+                    "id_vacante": r["id_vacante"],
+                    "titulo": r["titulo"],
+                    "nombre_empresa": r["nombre_empresa"]
+                })
+            return {"postulaciones": postulaciones}
+    except Exception as e:
+        print("Error listar_postulaciones_candidato:", e)
+        raise HTTPException(status_code=500, detail="Error interno listando postulaciones")
+    finally:
+        try: conn.close()
+        except Exception: pass

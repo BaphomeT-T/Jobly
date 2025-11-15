@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ver Aplicaciones - Jobly</title>
+  <!-- Tailwind via CDN (on-demand) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              100: '#F23E8E',
+              shade60: '#892753',
+              shade80: '#D93A80',
+              tint10: '#FFF0F5',
+              tint02: '#FFF9FB',
+              shade05: '#13060E'
+            },
+            neutral: {
+              10: '#1D1E1D',
+              20: '#333434',
+              30: '#4A4B4A',
+              40: '#606261',
+              50: '#767977',
+              60: '#8C8F8E',
+              70: '#A2A6A4',
+              80: '#B8BDBB'
+            },
+            link: '#6532C1'
+          },
+          fontFamily: {
+            poppins: ['Poppins','sans-serif'],
+            inter: ['Inter','sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Hide scrollbars for job list area (similar to Figma aesthetic) */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="font-poppins bg-white text-neutral-10">
+  <!-- Header -->
+  <header class="w-full border-b border-neutral-70/30 flex items-center justify-between px-8 py-6">
+    <h1 class="text-3xl font-semibold"><span class="text-primary-100">Job</span>ly</h1>
+    <nav class="flex gap-10 text-[18px]">
+      <a href="#" class="text-primary-shade80 font-semibold border-b-2 border-primary-shade80 pb-1">Buscar Vacantes</a>
+      <a href="/ver-vacantes" class="text-neutral-40">Ver vacantes (Empresa)</a>
+      <a href="/actividades" class="text-neutral-40">Actividades</a>
+    </nav>
+    <div class="flex items-center gap-4">
+      <span id="session-email" class="text-sm text-neutral-60"></span>
+      <button id="logoutBtn" class="text-sm text-neutral-40 hover:text-primary-shade60">Salir</button>
+    </div>
+  </header>
+
+  <!-- Search Bar -->
+  <section class="max-w-5xl mx-auto mt-8 px-4">
+    <div class="flex items-center bg-white border border-neutral-80 rounded-full h-20 px-8">
+      <input id="searchInput" type="text" placeholder="Junior / Intern Position" class="flex-1 outline-none text-neutral-80 placeholder-neutral-80" />
+      <button id="searchBtn" class="bg-primary-tint10 rounded-full w-14 h-14 flex items-center justify-center hover:bg-primary-shade80/10" title="Buscar">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-neutral-40">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18a7.5 7.5 0 006.15-3.35z" />
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- Main layout -->
+  <main class="max-w-[1500px] mx-auto mt-10 px-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Vacantes List -->
+    <aside class="lg:col-span-1 space-y-4 overflow-y-auto max-h-[70vh] pr-1 no-scrollbar" id="vacantesList">
+      <!-- Job cards injected here -->
+      <div id="loadingVacantes" class="text-sm text-neutral-60">Cargando vacantes...</div>
+    </aside>
+
+    <!-- Detalle Vacante -->
+    <section class="lg:col-span-2 bg-primary-tint02 rounded-md p-10 flex flex-col" id="detalleVacante">
+      <div id="detallePlaceholder" class="text-neutral-60">Selecciona una vacante para ver los detalles.</div>
+    </section>
+  </main>
+
+  <!-- Templates (hidden) -->
+  <template id="tplVacante">
+    <div class="border border-neutral-70/40 rounded-md p-4 bg-white flex flex-col gap-3 shadow-sm hover:shadow-md transition group">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-full bg-primary-shade60/20 flex items-center justify-center text-[10px] text-primary-shade60 font-semibold">C</div>
+          <p class="text-sm text-neutral-60 font-medium company-name"></p>
+        </div>
+        <button class="bookmark text-neutral-40 hover:text-primary-shade60" title="Guardar">☆</button>
+      </div>
+      <h3 class="text-lg font-medium job-title"></h3>
+      <p class="text-xs text-neutral-50 job-location"></p>
+      <div class="flex flex-wrap gap-2">
+        <span class="px-4 py-1 rounded-full border border-primary-shade60 text-primary-shade60 text-xs font-semibold ease-tag hidden">Easy Apply</span>
+        <span class="px-4 py-1 rounded-full bg-primary-tint10 text-primary-shade60 text-xs font-semibold multi-tag hidden">Multiple Candidate</span>
+        <span class="px-4 py-1 rounded-full bg-neutral-80/10 text-neutral-40 text-xs font-medium modality-tag"></span>
+      </div>
+      <div class="flex items-center justify-between text-xs text-neutral-40">
+        <span class="published-ago"></span>
+        <span class="applications-count"></span>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    async function fetchSession() {
+      try {
+        const r = await fetch('/api/me');
+        if (!r.ok) return;
+        const data = await r.json();
+        document.getElementById('session-email').textContent = data.email + ' (' + data.rol + ')';
+      } catch(e) { /* ignore */ }
+    }
+
+    async function fetchVacantes(query='') {
+      const list = document.getElementById('vacantesList');
+      list.innerHTML = ''; // reset
+      const loading = document.createElement('div');
+      loading.textContent = 'Cargando vacantes...';
+      loading.className = 'text-sm text-neutral-60';
+      list.appendChild(loading);
+      try {
+        const url = '/api/vacantes/publicadas' + (query ? ('?search=' + encodeURIComponent(query)) : '');
+        const res = await fetch(url);
+        if(!res.ok) throw new Error('Error al obtener vacantes');
+        const data = await res.json();
+        list.innerHTML='';
+        if(!data.vacantes.length){
+          list.innerHTML = '<p class="text-sm text-neutral-60">No se encontraron vacantes.</p>';
+          return;
+        }
+        data.vacantes.forEach(v => renderVacanteCard(v));
+        // Auto-select first
+        renderDetalle(data.vacantes[0]);
+      } catch(e){
+        list.innerHTML = '<p class="text-sm text-red-600">' + e.message + '</p>';
+      }
+    }
+
+    function timeAgo(fechaISO){
+      if(!fechaISO) return '';
+      const diffMs = Date.now() - new Date(fechaISO).getTime();
+      const days = Math.floor(diffMs/86400000);
+      return days + 'd';
+    }
+
+    function renderVacanteCard(v){
+      const tpl = document.getElementById('tplVacante').content.cloneNode(true);
+      tpl.querySelector('.company-name').textContent = v.nombre_empresa;
+      tpl.querySelector('.job-title').textContent = v.titulo;
+      tpl.querySelector('.job-location').textContent = (v.modalidad || '') + (v.salario? ' • $' + v.salario : '');
+      tpl.querySelector('.modality-tag').textContent = v.modalidad || '';
+      tpl.querySelector('.published-ago').textContent = timeAgo(v.fecha_creacion);
+      tpl.querySelector('.applications-count').textContent = v.num_postulaciones + ' postulaciones';
+      const card = tpl.children[0];
+      card.addEventListener('click',()=>renderDetalle(v));
+      document.getElementById('vacantesList').appendChild(card);
+    }
+
+    function renderDetalle(v){
+      const cont = document.getElementById('detalleVacante');
+      cont.innerHTML = '';
+      const header = document.createElement('div');
+      header.className = 'flex justify-between items-start mb-6';
+      header.innerHTML = `\n+        <div>\n+          <p class='text-link text-sm font-semibold'>${v.nombre_empresa}</p>\n+          <h2 class='text-2xl font-semibold mt-2'>${v.titulo}</h2>\n+          <p class='text-sm text-neutral-50 mt-1'>${v.modalidad || ''}</p>\n+        </div>\n+        <div class='flex flex-col gap-4 items-end'>\n+          <button id='applyBtn' class='bg-primary-100 text-primary-shade05 px-6 py-3 rounded-full font-semibold hover:bg-primary-shade80 transition'>Postular</button>\n+          <span class='text-xs text-neutral-50'>${v.num_postulaciones} postulaciones</span>\n+        </div>`;
+      cont.appendChild(header);
+      const body = document.createElement('div');
+      body.className='space-y-8 text-sm font-inter';
+      body.innerHTML = `\n+        <div>\n+          <h3 class='font-semibold text-neutral-20 text-base mb-2'>Descripción</h3>\n+          <p class='leading-relaxed'>${(v.descripcion||'Sin descripción')}</p>\n+        </div>`;
+      cont.appendChild(body);
+      document.getElementById('applyBtn').addEventListener('click',()=>applyToVacante(v.id_vacante));
+    }
+
+    async function applyToVacante(id){
+      const btn = document.getElementById('applyBtn');
+      btn.disabled = true; btn.textContent='Enviando...';
+      try {
+        const res = await fetch(`/api/vacantes/${id}/postular`, {method:'POST'});
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.detail||'Error al postular');
+        btn.textContent='Postulación enviada';
+        btn.classList.remove('bg-primary-100');
+        btn.classList.add('bg-green-500','text-white');
+        // Refresh list to update counts
+        fetchVacantes(document.getElementById('searchInput').value.trim());
+      } catch(e){
+        btn.disabled=false; btn.textContent='Postular';
+        alert(e.message);
+      }
+    }
+
+    document.getElementById('searchBtn').addEventListener('click',()=>{
+      const q = document.getElementById('searchInput').value.trim();
+      fetchVacantes(q);
+    });
+    document.getElementById('searchInput').addEventListener('keydown',e=>{ if(e.key==='Enter'){ fetchVacantes(e.target.value.trim()); }});
+    document.getElementById('logoutBtn').addEventListener('click', async ()=>{ try { await fetch('/api/logout',{method:'POST'}); location.href='/login'; } catch(e){} });
+
+    fetchSession();
+    fetchVacantes();
+  </script>
+</body>
+</html>
