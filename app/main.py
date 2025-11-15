@@ -1379,25 +1379,33 @@ async def listar_vacantes_publicadas(request: Request, search: str | None = None
                 params.extend([s, s, s, s])
             # Importante: incluir TODAS las columnas seleccionadas (no agregadas) en el GROUP BY para Postgres
             base_sql += " GROUP BY v.ID_Vacante, v.Titulo, v.Descripcion, v.Salario, v.Modalidad, v.Estado, v.Fecha_Creacion, e.Nombre_Empresa ORDER BY v.Fecha_Creacion DESC"
+            
+            logger.info(f"Ejecutando query para vacantes publicadas. Search: {search}")
             cur.execute(base_sql, params)
             rows = cur.fetchall() or []
+            logger.info(f"Vacantes encontradas: {len(rows)}")
+            
             vacantes = []
             for r in rows:
-                vacantes.append({
-                    "id_vacante": r["id_vacante"],
-                    "titulo": r["titulo"],
-                    "descripcion": r["descripcion"],
-                    "salario": float(r["salario"]) if r.get("salario") is not None else None,
-                    "modalidad": r["modalidad"],
-                    "estado": r["estado"],
-                    "fecha_creacion": r["fecha_creacion"].isoformat() if r["fecha_creacion"] else None,
-                    "nombre_empresa": r["nombre_empresa"],
-                    "num_postulaciones": int(r["num_postulaciones"]) if r.get("num_postulaciones") is not None else 0
-                })
+                # Usar .get() con nombres en minúsculas (RealDictCursor los convierte automáticamente)
+                vacante = {
+                    "id_vacante": r.get("id_vacante") or r.get("ID_Vacante"),
+                    "titulo": r.get("titulo") or r.get("Titulo"),
+                    "descripcion": r.get("descripcion") or r.get("Descripcion"),
+                    "salario": float(r.get("salario") or r.get("Salario")) if (r.get("salario") or r.get("Salario")) is not None else None,
+                    "modalidad": r.get("modalidad") or r.get("Modalidad"),
+                    "estado": r.get("estado") or r.get("Estado"),
+                    "fecha_creacion": (r.get("fecha_creacion") or r.get("Fecha_Creacion")).isoformat() if (r.get("fecha_creacion") or r.get("Fecha_Creacion")) else None,
+                    "nombre_empresa": r.get("nombre_empresa") or r.get("Nombre_Empresa"),
+                    "num_postulaciones": int(r.get("num_postulaciones", 0))
+                }
+                vacantes.append(vacante)
+                
+            logger.info(f"Devolviendo {len(vacantes)} vacantes")
             return {"vacantes": vacantes}
     except Exception as e:
-        print("Error listar_vacantes_publicadas:", e)
-        raise HTTPException(status_code=500, detail="Error interno listando vacantes")
+        logger.error(f"Error listar_vacantes_publicadas: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error interno listando vacantes: {str(e)}")
     finally:
         try: conn.close()
         except Exception: pass
