@@ -16,11 +16,16 @@
         throw new Error('Auth check failed');
       }
       const data = await res.json();
-      // Expected: { authenticated: true, user: { id, email, rol, nombre? } }
-      if (data && data.user) {
+      // Accept both {user:{...}} and direct user object for backward compatibility
+      if (data && typeof data === 'object' && data.user) {
         window.currentUser = data.user;
+        return data.user;
       }
-      return data?.user ?? null;
+      if (data && (data.email || data.rol || data.id_usuario)) {
+        window.currentUser = data;
+        return data;
+      }
+      return null;
     } catch (err) {
       console.error('Error during auth check:', err);
       // Fallback to login if something goes wrong

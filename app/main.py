@@ -234,6 +234,7 @@ async def api_me(request: Request):
     user = request.session.get("user") if hasattr(request, "session") else None
     if not user:
         raise HTTPException(status_code=401, detail="No autenticado")
+    # Keep legacy simple object response for existing clients
     return user
 
 @app.post("/api/logout")
@@ -524,6 +525,182 @@ async def crear_vacante(data: VacanteCreate):
         raise HTTPException(status_code=500, detail="Error interno creando la vacante")
     finally:
         conn.close()
+
+
+# -----------------------------
+# Candidato: Perfil (GET/PUT)
+# -----------------------------
+class CandidateProfileUpdate(BaseModel):
+    nombre_completo: str | None = None
+    fecha_nacimiento: str | None = None  # ISO date 'YYYY-MM-DD'
+    genero: str | None = None
+    linkedin_url: str | None = None
+    github_url: str | None = None
+    portafolio_url: str | None = None
+
+
+@app.get("/api/candidato/perfil")
+async def get_candidato_perfil(request: Request):
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    if not session_user or not isinstance(session_user, dict):
+        raise HTTPException(status_code=401, detail="No autenticado")
+
+    email = session_user.get("email")
+    if not email:
+        raise HTTPException(status_code=401, detail="No autenticado")
+
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT u.ID_Usuario, u.Email, u.Rol, u.Estado_Cuenta,
+                       c.ID_Candidato, c.Nombre_Completo, c.Fecha_Nacimiento, c.Genero,
+                       c.LinkedIn_URL, c.GitHub_URL, c.Portafolio_URL
+                FROM USUARIO u
+                LEFT JOIN CANDIDATO c ON c.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s
+                LIMIT 1;
+                """,
+                (email,),
+            )
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+            if row["rol"] != "Candidato":
+                raise HTTPException(status_code=403, detail="Solo candidatos tienen perfil editable aquí")
+
+            if row["id_candidato"] is None:
+                # Crear registro de candidato si no existe aún
+                cur.execute(
+                    """
+                    INSERT INTO CANDIDATO (FK_ID_Usuario, Nombre_Completo)
+                    VALUES (%s, %s)
+                    RETURNING ID_Candidato
+                    """,
+                    (row["id_usuario"], row["email"]),
+                )
+                created = cur.fetchone()
+                conn.commit()
+                row["id_candidato"] = created["id_candidato"] if isinstance(created, dict) else created[0]
+
+            account = {
+                "id_usuario": row["id_usuario"],
+                "email": row["email"],
+                "rol": row["rol"],
+                "estado_cuenta": row["estado_cuenta"],
+            }
+            profile = {
+                "id_candidato": row["id_candidato"],
+                "nombre_completo": row["nombre_completo"],
+                "fecha_nacimiento": row["fecha_nacimiento"].isoformat() if row["fecha_nacimiento"] else None,
+                "genero": row["genero"],
+                "linkedin_url": row["linkedin_url"],
+                "github_url": row["github_url"],
+                "portafolio_url": row["portafolio_url"],
+            }
+            return {"account": account, "profile": profile}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error get_candidato_perfil: {e}")
+        raise HTTPException(status_code=500, detail="Error interno obteniendo perfil")
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+@app.put("/api/candidato/perfil")
+async def update_candidato_perfil(data: CandidateProfileUpdate, request: Request):
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    if not session_user or not isinstance(session_user, dict):
+        raise HTTPException(status_code=401, detail="No autenticado")
+
+    email = session_user.get("email")
+    if not email:
+        raise HTTPException(status_code=401, detail="No autenticado")
+
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            # Ensure candidate row exists
+            cur.execute(
+                """
+                SELECT u.ID_Usuario, u.Rol, c.ID_Candidato
+                FROM USUARIO u
+                LEFT JOIN CANDIDATO c ON c.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s
+                LIMIT 1;
+                """,
+                (email,),
+            )
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="Usuario no encontrado")
+            if row["rol"] != "Candidato":
+                raise HTTPException(status_code=403, detail="Solo candidatos pueden editar este perfil")
+
+            if row["id_candidato"] is None:
+                cur.execute(
+                    "INSERT INTO CANDIDATO (FK_ID_Usuario) VALUES (%s) RETURNING ID_Candidato;",
+                    (row["id_usuario"],),
+                )
+                newc = cur.fetchone()
+                id_candidato = newc["id_candidato"] if isinstance(newc, dict) else newc[0]
+            else:
+                id_candidato = row["id_candidato"]
+
+            fields = []
+            params = []
+            if data.nombre_completo is not None:
+                fields.append("Nombre_Completo = %s")
+                params.append(data.nombre_completo)
+            if data.fecha_nacimiento is not None:
+                fields.append("Fecha_Nacimiento = %s")
+                params.append(data.fecha_nacimiento)
+            if data.genero is not None:
+                fields.append("Genero = %s")
+                params.append(data.genero)
+            if data.linkedin_url is not None:
+                fields.append("LinkedIn_URL = %s")
+                params.append(data.linkedin_url)
+            if data.github_url is not None:
+                fields.append("GitHub_URL = %s")
+                params.append(data.github_url)
+            if data.portafolio_url is not None:
+                fields.append("Portafolio_URL = %s")
+                params.append(data.portafolio_url)
+
+            if not fields:
+                raise HTTPException(status_code=400, detail="No hay campos para actualizar")
+
+            params.append(id_candidato)
+            cur.execute(
+                f"UPDATE CANDIDATO SET {', '.join(fields)} WHERE ID_Candidato = %s RETURNING ID_Candidato;",
+                params,
+            )
+            conn.commit()
+            return {"message": "Perfil actualizado", "id_candidato": id_candidato}
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error update_candidato_perfil: {e}")
+        raise HTTPException(status_code=500, detail="Error interno actualizando perfil")
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
 @app.get("/api/vacantes/{id_vacante}")

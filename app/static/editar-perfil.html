@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <base href="/">
+  <title>Editar Perfil - Jobly</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/static/auth.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    .label-small { color: #141514; font-weight:600; font-size:14px }
+    .muted { color: #767977 }
+  </style>
+</head>
+<body class="bg-[#fbfcfb] min-h-screen font-[Poppins,sans-serif] overflow-x-hidden">
+  <!-- Header -->
+  <header class="flex items-center justify-between px-[32px] pl-[32px] pr-[108px] pt-[24px] pb-[16px] border-b border-[#e5eae8] h-[86px] bg-white">
+    <a href="/home-postulantes" class="block h-[62px] w-[172px]">
+      <img src="/static/images/logo-login.png" alt="Jobly Logo" class="h-full w-full object-contain" />
+    </a>
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-6">
+      <!-- Bell -->
+      <img src="https://www.figma.com/api/mcp/asset/6d7764a6-07de-48fc-af3e-a858d0974bb7" alt="bell" class="w-6 h-6" />
+      <!-- Profile circle -->
+      <img src="https://www.figma.com/api/mcp/asset/9f99fd2a-ab50-41e4-825c-68a884b37b10" alt="profile" class="w-6 h-6 rounded-full" />
+      <button id="logoutBtn" class="border border-[#141514] text-[#141514] px-3 py-1 rounded-[24px] text-sm font-semibold hover:bg-[#141514] hover:text-white transition-colors">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <!-- Subheader Tabs (simple) -->
+  <section class="flex gap-[64px] items-end justify-center px-[108px] pt-[16px] pb-0 border-b border-[#e5eae8] h-[56px] bg-white relative">
+    <div class="flex flex-col gap-[14px] items-center justify-center max-w-[140px] cursor-pointer">
+      <p class="text-[#d93a80] text-[20px] font-semibold text-center leading-[1] whitespace-nowrap">About</p>
+      <div class="w-full h-[3px] bg-transparent"></div>
+    </div>
+    <div class="flex flex-col gap-[14px] items-center justify-center max-w-[140px] cursor-pointer" onclick="window.location.href='/ver-postulaciones'">
+      <p class="text-[#606261] text-[20px] font-medium text-center leading-[1.2] whitespace-nowrap">Postulaciones</p>
+      <div class="w-full h-[3px] bg-transparent"></div>
+    </div>
+    <div class="flex flex-col gap-[14px] items-center justify-center max-w-[140px] cursor-pointer" onclick="window.location.href='/buscar-vacantes'">
+      <p class="text-[#606261] text-[20px] font-medium text-center leading-[1.2] whitespace-nowrap">Ver Vacantes</p>
+      <div class="w-full h-[3px] bg-transparent"></div>
+    </div>
+  </section>
+
+  <!-- Main Card -->
+  <main class="max-w-[1000px] mx-auto px-4 pt-12 pb-24">
+    <div class="bg-white border border-[#cfd4d1] rounded-[4px] p-[40px] mt-8">
+      <!-- Header row with avatar and account info -->
+      <div class="flex items-start gap-6">
+        <div class="w-[136px] h-[136px] rounded-[68px] border border-[#e5eae8] overflow-hidden relative">
+          <img src="https://www.figma.com/api/mcp/asset/757c03b8-46ae-4bb8-8434-7f57755d9e7a" alt="avatar" class="w-full h-full object-cover" />
+          <button id="editAvatar" class="absolute bottom-2 right-2 bg-white border border-[#e5eae8] rounded-full p-2">
+            <img src="https://www.figma.com/api/mcp/asset/08e37d69-fbf6-47e5-8fff-ad973fd46910" alt="edit" class="w-4 h-4" />
+          </button>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 id="nombreHeading" class="text-[32px] font-semibold text-[#141514]">Mi Perfil</h1>
+              <p id="cuentaInfo" class="muted">Cargando cuenta...</p>
+            </div>
+            <div>
+              <button id="openToBtn" class="border border-[#13060e] px-6 py-2 rounded-[64px] text-[16px] font-semibold">Open to</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="my-8 border-[#e5eae8]" />
+
+      <!-- Editable Profile Form -->
+      <form id="perfilForm" class="grid grid-cols-2 gap-6">
+        <div class="col-span-2">
+          <label class="label-small" for="nombreInput">Nombre completo</label>
+          <input id="nombreInput" type="text" class="w-full border border-[#cfd4d1] rounded-[4px] p-3 text-[14px]" placeholder="Tu nombre" />
+        </div>
+        <div>
+          <label class="label-small" for="fechaInput">Fecha de nacimiento</label>
+          <input id="fechaInput" type="date" class="w-full border border-[#cfd4d1] rounded-[4px] p-3 text-[14px]" />
+        </div>
+        <div>
+          <label class="label-small" for="generoInput">Género</label>
+          <select id="generoInput" class="w-full border border-[#cfd4d1] rounded-[4px] p-3 text-[14px]">
+            <option value="">Selecciona...</option>
+            <option value="Femenino">Femenino</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div>
+          <label class="label-small" for="linkedinInput">LinkedIn</label>
+          <input id="linkedinInput" type="url" class="w-full border border-[#cfd4d1] rounded-[4px] p-3 text-[14px]" placeholder="https://www.linkedin.com/in/usuario" />
+        </div>
+        <div>
+          <label class="label-small" for="githubInput">GitHub</label>
+          <input id="githubInput" type="url" class="w-full border border-[#cfd4d1] rounded-[4px] p-3 text-[14px]" placeholder="https://github.com/usuario" />
+        </div>
+        <div class="col-span-2">
+          <label class="label-small" for="portafolioInput">Portafolio</label>
+          <input id="portafolioInput" type="url" class="w-full border border-[#cfd4d1] rounded-[4px] p-3 text-[14px]" placeholder="https://mi-sitio.com" />
+        </div>
+
+        <div class="col-span-2 mt-2">
+          <button type="submit" class="bg-[#c89bfa] text-white px-6 py-3 rounded-[64px] text-[16px] font-semibold hover:bg-[#b080e8]">Guardar cambios</button>
+          <span id="saveStatus" class="ml-3 text-[#606261]"></span>
+        </div>
+      </form>
+
+      <hr class="my-8 border-[#e5eae8]" />
+
+      <section>
+        <h2 class="text-[24px] font-semibold text-[#8c8f8e] mb-4">Resume</h2>
+        <div class="bg-white border border-[#e5eae8] p-6 rounded-[4px] flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <img src="https://www.figma.com/api/mcp/asset/d3a142e9-3752-4632-9b00-f4e8e7cd785d" alt="file" class="w-6 h-6" />
+            <div>
+              <div class="font-semibold text-[16px]">Mi CV</div>
+              <div class="text-[12px] muted">(pendiente de carga)</div>
+            </div>
+          </div>
+          <img src="https://www.figma.com/api/mcp/asset/11df3a8d-0da8-4e6c-a102-f2ba410eb9aa" alt="more" class="w-6 h-6" />
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Cargar datos de perfil
+      try {
+        const res = await fetch('/api/candidato/perfil');
+        if (!res.ok) {
+          if (res.status === 401) { window.location.href = '/login'; return; }
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || 'No se pudo cargar el perfil');
+        }
+        const data = await res.json();
+        const acc = data.account || {};
+        const p = data.profile || {};
+
+        // Mostrar cuenta
+        document.getElementById('cuentaInfo').textContent = `${acc.email || ''} · ${acc.rol || ''}`;
+        document.getElementById('nombreHeading').textContent = p.nombre_completo || 'Mi Perfil';
+
+        // Prefill inputs
+        document.getElementById('nombreInput').value = p.nombre_completo || '';
+        document.getElementById('fechaInput').value = p.fecha_nacimiento || '';
+        document.getElementById('generoInput').value = p.genero || '';
+        document.getElementById('linkedinInput').value = p.linkedin_url || '';
+        document.getElementById('githubInput').value = p.github_url || '';
+        document.getElementById('portafolioInput').value = p.portafolio_url || '';
+      } catch (e) {
+        console.error(e);
+        alert(e.message);
+      }
+
+      // Guardar cambios
+      document.getElementById('perfilForm').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const payload = {
+          nombre_completo: document.getElementById('nombreInput').value.trim() || null,
+          fecha_nacimiento: document.getElementById('fechaInput').value || null,
+          genero: document.getElementById('generoInput').value || null,
+          linkedin_url: document.getElementById('linkedinInput').value.trim() || null,
+          github_url: document.getElementById('githubInput').value.trim() || null,
+          portafolio_url: document.getElementById('portafolioInput').value.trim() || null,
+        };
+        // remove nulls not necessary but ok
+        Object.keys(payload).forEach(k => payload[k] === null && delete payload[k]);
+        const status = document.getElementById('saveStatus');
+        status.textContent = 'Guardando...';
+        try {
+          const resp = await fetch('/api/candidato/perfil', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.detail || 'No se pudo guardar');
+          }
+          status.textContent = 'Cambios guardados';
+          setTimeout(() => status.textContent = '', 2000);
+        } catch (err) {
+          console.error(err);
+          status.textContent = '';
+          alert(err.message);
+        }
+      });
+
+      // Edit avatar placeholder
+      document.getElementById('editAvatar')?.addEventListener('click', () => {
+        alert('Subida de avatar no implementada aún');
+      });
+    });
+  </script>
+</body>
+</html>
