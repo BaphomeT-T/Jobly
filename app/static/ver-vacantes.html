@@ -223,6 +223,12 @@
       return `${day}/${month}/${year}`;
     }
 
+    // Redirige a la vista de candidato / Ver-aplicaciones para ver detalle y postular
+    function viewVacante(id) {
+      if (!id) return;
+      window.location.href = '/ver-aplicaciones?id=' + encodeURIComponent(id);
+    }
+
     // Función para mapear estado a texto de UI
     function mapEstado(estado) {
       const estadoMap = {
@@ -234,35 +240,39 @@
       return estadoMap[estado] || estado;
     }
 
-    // Función para crear una fila de vacante
+    // Función para crear una fila de vacante (muestra empresa y soporta búsqueda)
     function createVacanteRow(vacante, index) {
       const bgClass = index % 2 === 0 ? 'bg-[#f7f9f8]' : 'bg-white';
       const borderClass = index === 0 ? 'border border-[#a2a6a4]' : '';
-      
+
       return `
         <div class="${bgClass} ${borderClass} px-[24px] py-[16px] rounded-[4px] flex items-center gap-[32px] h-[62px]">
           <!-- Star Icon -->
           <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#b080e8"/>
           </svg>
-          
+
           <!-- Content -->
           <div class="flex items-center justify-between flex-1 h-[30px]">
-            <p class="text-[#1d1e1d] text-[16px] font-semibold leading-[1.2] w-[220px] truncate">${vacante.titulo}</p>
+            <div class="flex flex-col w-[220px]">
+              <p class="text-[#1d1e1d] text-[16px] font-semibold leading-[1.2] truncate">${vacante.titulo}</p>
+              <p class="text-[#606261] text-[12px] leading-[1.2] truncate">${vacante.nombre_empresa || ''}</p>
+            </div>
+
             <p class="capitalize text-[#333434] text-[16px] font-medium leading-[1.2] w-[150px]">${vacante.modalidad || 'N/A'}</p>
-            
+
             <div class="flex items-center w-[150px]">
               <p class="text-[#333434] text-[16px] font-medium leading-[1.9] w-[40px]">${vacante.num_postulaciones}</p>
-              <button class="border border-[#4a4b4a] px-[8px] py-[4px] rounded-[64px] ml-2">
-                <p class="text-[#4a4b4a] text-[14px] font-semibold leading-[1.2]">View</p>
+              <button class="border border-[#4a4b4a] px-[8px] py-[4px] rounded-[64px] ml-2" onclick="viewVacante(${vacante.id_vacante})">
+                <p class="text-[#4a4b4a] text-[14px] font-semibold leading-[1.2]">Ver</p>
               </button>
             </div>
-            
+
             <p class="text-[#333434] text-[14px] font-medium leading-[1.9] w-[170px]">${formatDate(vacante.fecha_creacion)}</p>
             <p class="text-[#333434] text-[16px] font-medium leading-[1.9] w-[70px]">${mapEstado(vacante.estado)}</p>
           </div>
-          
-          <!-- More Icon with Edit Link -->
+
+          <!-- More Icon with Edit Link (if user can edit) -->
           <svg class="w-6 h-6 shrink-0 cursor-pointer hover:opacity-70 transition-opacity" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="window.location.href='/editar-vacante?id=${vacante.id_vacante}'">
             <circle cx="12" cy="6" r="1.5" fill="#333434"/>
             <circle cx="12" cy="12" r="1.5" fill="#333434"/>
@@ -300,7 +310,8 @@
 
       try {
         if (loadingState) loadingState.classList.remove('hidden');
-        const response = await fetch('/api/vacantes/empresa');
+        // Use public endpoint to list all published vacantes across companies
+        const response = await fetch('/api/vacantes/publicadas');
         
         if (!response.ok) {
           if (response.status === 401) {

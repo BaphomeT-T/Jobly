@@ -6,6 +6,7 @@
   <title>Ver Aplicaciones - Jobly</title>
   <!-- Tailwind via CDN (on-demand) -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/styles.css">
   <script>
     tailwind.config = {
       theme: {
@@ -138,8 +139,19 @@
           return;
         }
         data.vacantes.forEach(v => renderVacanteCard(v));
-        // Auto-select first
-        renderDetalle(data.vacantes[0]);
+        // Auto-select: prefer id from query param, otherwise first
+        const params = new URLSearchParams(window.location.search);
+        const selectedId = params.get('id');
+        if (selectedId) {
+          const found = data.vacantes.find(x => String(x.id_vacante) === String(selectedId) || String(x.id) === String(selectedId));
+          if (found) {
+            renderDetalle(found);
+          } else {
+            renderDetalle(data.vacantes[0]);
+          }
+        } else {
+          renderDetalle(data.vacantes[0]);
+        }
       } catch(e){
         list.innerHTML = '<p class="text-sm text-red-600">' + e.message + '</p>';
       }

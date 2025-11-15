@@ -12,13 +12,35 @@
     <style>body{font-family:'Poppins',sans-serif;}</style>
     </head>
     <body class="bg-white min-h-screen font-[Poppins,sans-serif]">
-    <!-- Header (Figma accurate) -->
-    <header class="flex items-center justify-between px-[30px] pt-[24px] pb-[16px] border-b border-[#e5eae8] h-[86px]">
-        <a href="/" class="block h-[62px] w-[172px]">
-        <img src="/static/images/logo-login.png" alt="Jobly Logo" class="h-full w-full object-contain" />
+        <!-- Header -->
+    <header class="flex items-center justify-between px-[32px] pl-[32px] pr-[108px] pt-[24px] pb-[16px] border-b border-[#e5eae8] h-[86px] bg-white">
+        <a href="/home-empresa" class="block h-[62px] w-[172px]">
+            <img src="/static/images/logo-login.png" alt="Jobly Logo" class="h-full w-full object-contain"
+                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27172%27 height=%2762%27%3E%3Crect width=%27172%27 height=%2762%27 fill=%27%23f23e8e%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-size=%2720%27%3EJobly%3C/text%3E%3C/svg%3E'" />
         </a>
-        <div class="flex items-center gap-4">
-        <div class="h-6 w-px bg-[#e5eae8]"></div>
+        <div class="flex-1"></div>
+        <div class="flex items-center gap-6">
+            <!-- Help Icon -->
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="#141514" stroke-width="1.5" />
+                <path d="M9.09 9C9.325 8.33 9.835 7.81 10.5 7.57C11.165 7.33 11.903 7.39 12.516 7.74C13.129 8.09 13.563 8.69 13.72 9.38C13.877 10.07 13.745 10.79 13.35 11.38C12.955 11.97 12.33 12.38 11.62 12.51V13.5" stroke="#141514" stroke-linecap="round" />
+                <circle cx="12" cy="17" r="1" fill="#141514" />
+            </svg>
+            <!-- Mail Icon -->
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M22 6L12 13L2 6" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <!-- Profile Icon (Purple) -->
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" fill="#c89bfa" />
+                <circle cx="12" cy="10" r="3" fill="white" />
+                <path d="M6.168 18.849A6.5 6.5 0 0 1 12 15.5a6.5 6.5 0 0 1 5.832 3.349" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+            <!-- Logout Button -->
+            <button id="logoutBtn" class="border border-[#141514] text-[#141514] px-3 py-1 rounded-[24px] text-sm font-semibold hover:bg-[#141514] hover:text-white transition-colors">
+                Cerrar sesión
+            </button>
         </div>
     </header>
 
