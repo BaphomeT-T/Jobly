@@ -1377,7 +1377,8 @@ async def listar_vacantes_publicadas(request: Request, search: str | None = None
                 )
                 s = f"%{search.lower()}%"
                 params.extend([s, s, s, s])
-            base_sql += " GROUP BY v.ID_Vacante, e.Nombre_Empresa ORDER BY v.Fecha_Creacion DESC"
+            # Importante: incluir TODAS las columnas seleccionadas (no agregadas) en el GROUP BY para Postgres
+            base_sql += " GROUP BY v.ID_Vacante, v.Titulo, v.Descripcion, v.Salario, v.Modalidad, v.Estado, v.Fecha_Creacion, e.Nombre_Empresa ORDER BY v.Fecha_Creacion DESC"
             cur.execute(base_sql, params)
             rows = cur.fetchall() or []
             vacantes = []
