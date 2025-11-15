@@ -99,11 +99,6 @@
           <label class="label-small" for="portafolioInput">Portafolio</label>
           <input id="portafolioInput" type="url" class="w-full border border-[#cfd4d1] rounded-[4px] p-3 text-[14px]" placeholder="https://mi-sitio.com" />
         </div>
-
-        <div class="col-span-2 mt-2">
-          <button type="submit" class="bg-[#c89bfa] text-white px-6 py-3 rounded-[64px] text-[16px] font-semibold hover:bg-[#b080e8]">Guardar cambios</button>
-          <span id="saveStatus" class="ml-3 text-[#606261]"></span>
-        </div>
       </form>
 
       <hr class="my-8 border-[#e5eae8]" />
@@ -125,6 +120,11 @@
           </div>
         </div>
       </section>
+      <!-- Botón de guardar movido debajo de CV -->
+      <div class="mt-8 flex items-center">
+        <button id="savePerfilBtn" type="button" class="bg-[#c89bfa] text-white px-6 py-3 rounded-[64px] text-[16px] font-semibold hover:bg-[#b080e8]">Guardar cambios</button>
+        <span id="saveStatus" class="ml-3 text-[#606261]"></span>
+      </div>
     </div>
   </main>
 
@@ -210,6 +210,11 @@
           status.textContent = '';
           alert(err.message);
         }
+      });
+
+      // Nuevo botón fuera del form para enviar
+      document.getElementById('savePerfilBtn').addEventListener('click', () => {
+        document.getElementById('perfilForm').dispatchEvent(new Event('submit'));
       });
 
       // Edit avatar placeholder
