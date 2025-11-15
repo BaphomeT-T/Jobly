@@ -32,32 +32,26 @@
     </div>
   </header>
 
-  <!-- Subheader Tabs (simple) -->
-  <section class="flex gap-[64px] items-end justify-center px-[108px] pt-[16px] pb-0 border-b border-[#e5eae8] h-[56px] bg-white relative">
-    <div class="flex flex-col gap-[14px] items-center justify-center max-w-[140px] cursor-pointer">
-      <p class="text-[#d93a80] text-[20px] font-semibold text-center leading-[1] whitespace-nowrap">About</p>
-      <div class="w-full h-[3px] bg-transparent"></div>
-    </div>
-    <div class="flex flex-col gap-[14px] items-center justify-center max-w-[140px] cursor-pointer" onclick="window.location.href='/ver-postulaciones'">
-      <p class="text-[#606261] text-[20px] font-medium text-center leading-[1.2] whitespace-nowrap">Postulaciones</p>
-      <div class="w-full h-[3px] bg-transparent"></div>
-    </div>
-    <div class="flex flex-col gap-[14px] items-center justify-center max-w-[140px] cursor-pointer" onclick="window.location.href='/buscar-vacantes'">
-      <p class="text-[#606261] text-[20px] font-medium text-center leading-[1.2] whitespace-nowrap">Ver Vacantes</p>
-      <div class="w-full h-[3px] bg-transparent"></div>
-    </div>
-  </section>
+  <!-- Subheader eliminado -->
 
   <!-- Main Card -->
   <main class="max-w-[1000px] mx-auto px-4 pt-12 pb-24">
     <div class="bg-white border border-[#cfd4d1] rounded-[4px] p-[40px] mt-8">
       <!-- Header row with avatar and account info -->
       <div class="flex items-start gap-6">
-        <div class="w-[136px] h-[136px] rounded-[68px] border border-[#e5eae8] overflow-hidden relative">
-          <img src="https://www.figma.com/api/mcp/asset/757c03b8-46ae-4bb8-8434-7f57755d9e7a" alt="avatar" class="w-full h-full object-cover" />
-          <button id="editAvatar" class="absolute bottom-2 right-2 bg-white border border-[#e5eae8] rounded-full p-2">
-            <img src="https://www.figma.com/api/mcp/asset/08e37d69-fbf6-47e5-8fff-ad973fd46910" alt="edit" class="w-4 h-4" />
+        <div class="w-[136px] h-[136px] rounded-[68px] border border-[#e5eae8] overflow-hidden relative flex items-center justify-center bg-white">
+          <img id="avatarImg" alt="avatar" class="w-full h-full object-cover hidden" />
+          <!-- Silueta SVG -->
+          <svg id="avatarPlaceholder" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-24 h-24 text-[#cfd4d1]">
+            <circle cx="12" cy="8" r="5" fill="#cfd4d1" />
+            <path d="M2 22c0-5.523 4.477-10 10-10s10 4.477 10 10" fill="#cfd4d1" />
+          </svg>
+          <button id="editAvatar" class="absolute bottom-2 right-2 bg-white border border-[#e5eae8] rounded-full p-2" title="Subir foto">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 text-[#141514]">
+              <path fill="currentColor" d="M12 5v14m-7-7h14" stroke="#141514" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
           </button>
+          <input type="file" id="avatarFile" accept="image/*" class="hidden" />
         </div>
         <div class="flex-1">
           <div class="flex items-center justify-between">
@@ -115,16 +109,20 @@
       <hr class="my-8 border-[#e5eae8]" />
 
       <section>
-        <h2 class="text-[24px] font-semibold text-[#8c8f8e] mb-4">Resume</h2>
+        <h2 class="text-[24px] font-semibold text-[#8c8f8e] mb-4">Currículum</h2>
         <div class="bg-white border border-[#e5eae8] p-6 rounded-[4px] flex items-center justify-between">
           <div class="flex items-center gap-4">
-            <img src="https://www.figma.com/api/mcp/asset/d3a142e9-3752-4632-9b00-f4e8e7cd785d" alt="file" class="w-6 h-6" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6 text-[#606261]"><path fill="currentColor" d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4c0-1.1.9-2 2-2Z"/></svg>
             <div>
-              <div class="font-semibold text-[16px]">Mi CV</div>
-              <div class="text-[12px] muted">(pendiente de carga)</div>
+              <div id="cvLabel" class="font-semibold text-[16px]">Sin CV</div>
+              <div id="cvSub" class="text-[12px] muted">(pendiente de carga)</div>
             </div>
           </div>
-          <img src="https://www.figma.com/api/mcp/asset/11df3a8d-0da8-4e6c-a102-f2ba410eb9aa" alt="more" class="w-6 h-6" />
+          <div class="flex items-center gap-3">
+            <button id="downloadCvBtn" class="hidden border border-[#141514] px-3 py-1 rounded-[24px] text-sm font-semibold" title="Descargar CV">Descargar</button>
+            <button id="uploadCvBtn" class="border border-[#141514] px-3 py-1 rounded-[24px] text-sm font-semibold hover:bg-[#141514] hover:text-white transition-colors" title="Subir CV">Subir CV</button>
+            <input type="file" id="cvFile" accept="application/pdf" class="hidden" />
+          </div>
         </div>
       </section>
     </div>
@@ -143,6 +141,8 @@
         const data = await res.json();
         const acc = data.account || {};
         const p = data.profile || {};
+        const hasAvatar = !!p.has_avatar;
+        const hasCv = !!p.has_cv;
 
         // Mostrar cuenta
         document.getElementById('cuentaInfo').textContent = `${acc.email || ''} · ${acc.rol || ''}`;
@@ -155,6 +155,24 @@
         document.getElementById('linkedinInput').value = p.linkedin_url || '';
         document.getElementById('githubInput').value = p.github_url || '';
         document.getElementById('portafolioInput').value = p.portafolio_url || '';
+        // Avatar display
+        const avatarImg = document.getElementById('avatarImg');
+        const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+        if (hasAvatar) {
+          avatarImg.src = '/api/candidato/avatar?_=' + Date.now(); // evitar cache
+          avatarImg.classList.remove('hidden');
+          avatarPlaceholder.classList.add('hidden');
+        }
+
+        // CV display
+        const cvLabel = document.getElementById('cvLabel');
+        const cvSub = document.getElementById('cvSub');
+        const downloadCvBtn = document.getElementById('downloadCvBtn');
+        if (hasCv) {
+          cvLabel.textContent = 'Mi CV';
+          cvSub.textContent = 'Última versión cargada';
+          downloadCvBtn.classList.remove('hidden');
+        }
       } catch (e) {
         console.error(e);
         alert(e.message);
@@ -195,8 +213,48 @@
       });
 
       // Edit avatar placeholder
-      document.getElementById('editAvatar')?.addEventListener('click', () => {
-        alert('Subida de avatar no implementada aún');
+      // Subida avatar
+      const editAvatarBtn = document.getElementById('editAvatar');
+      const avatarFileInput = document.getElementById('avatarFile');
+      editAvatarBtn?.addEventListener('click', () => avatarFileInput.click());
+      avatarFileInput?.addEventListener('change', async () => {
+        if (!avatarFileInput.files?.length) return;
+        const f = avatarFileInput.files[0];
+        const fd = new FormData();
+        fd.append('file', f);
+        try {
+          const resp = await fetch('/api/candidato/avatar', { method: 'POST', body: fd });
+          if (!resp.ok) throw new Error('Error subiendo avatar');
+          // refrescar avatar
+          const avatarImg = document.getElementById('avatarImg');
+          const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+          avatarImg.src = '/api/candidato/avatar?_=' + Date.now();
+          avatarImg.classList.remove('hidden');
+          avatarPlaceholder.classList.add('hidden');
+        } catch (err) { alert(err.message); }
+      });
+
+      // Subida CV
+      const uploadCvBtn = document.getElementById('uploadCvBtn');
+      const cvFileInput = document.getElementById('cvFile');
+      const downloadCvBtn = document.getElementById('downloadCvBtn');
+      uploadCvBtn?.addEventListener('click', () => cvFileInput.click());
+      cvFileInput?.addEventListener('change', async () => {
+        if (!cvFileInput.files?.length) return;
+        const f = cvFileInput.files[0];
+        if (f.type !== 'application/pdf') { alert('Solo PDF'); return; }
+        const fd = new FormData();
+        fd.append('file', f);
+        try {
+          const resp = await fetch('/api/candidato/cv', { method: 'POST', body: fd });
+          if (!resp.ok) throw new Error('Error subiendo CV');
+          document.getElementById('cvLabel').textContent = 'Mi CV';
+          document.getElementById('cvSub').textContent = 'Última versión cargada';
+          downloadCvBtn.classList.remove('hidden');
+        } catch (err) { alert(err.message); }
+      });
+      downloadCvBtn?.addEventListener('click', () => {
+        window.open('/api/candidato/cv', '_blank');
       });
     });
   </script>

@@ -559,7 +559,8 @@ async def get_candidato_perfil(request: Request):
                 """
                 SELECT u.ID_Usuario, u.Email, u.Rol, u.Estado_Cuenta,
                        c.ID_Candidato, c.Nombre_Completo, c.Fecha_Nacimiento, c.Genero,
-                       c.LinkedIn_URL, c.GitHub_URL, c.Portafolio_URL
+                       c.LinkedIn_URL, c.GitHub_URL, c.Portafolio_URL,
+                       c.Foto_Perfil_BIN, c.CV_PDF_BIN
                 FROM USUARIO u
                 LEFT JOIN CANDIDATO c ON c.FK_ID_Usuario = u.ID_Usuario
                 WHERE u.Email = %s
@@ -602,6 +603,8 @@ async def get_candidato_perfil(request: Request):
                 "linkedin_url": row["linkedin_url"],
                 "github_url": row["github_url"],
                 "portafolio_url": row["portafolio_url"],
+                "has_avatar": bool(row.get("foto_perfil_bin")),
+                "has_cv": bool(row.get("cv_pdf_bin")),
             }
             return {"account": account, "profile": profile}
     except HTTPException:
@@ -609,6 +612,217 @@ async def get_candidato_perfil(request: Request):
     except Exception as e:
         logger.error(f"Error get_candidato_perfil: {e}")
         raise HTTPException(status_code=500, detail="Error interno obteniendo perfil")
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+# ------------------------------------------
+# Candidato: Subida y descarga de Avatar
+# ------------------------------------------
+@app.post("/api/candidato/avatar")
+async def upload_candidato_avatar(request: Request, file: UploadFile = File(...)):
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    if not session_user or not isinstance(session_user, dict):
+        raise HTTPException(status_code=401, detail="No autenticado")
+    email = session_user.get("email")
+    if not email:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    if not file or not file.filename:
+        raise HTTPException(status_code=400, detail="Archivo requerido")
+    if not (file.content_type or "").startswith("image"):
+        raise HTTPException(status_code=400, detail="El archivo debe ser una imagen")
+
+    data_bytes = await file.read()
+    if not data_bytes:
+        raise HTTPException(status_code=400, detail="Imagen vacía")
+
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT u.ID_Usuario, u.Rol, c.ID_Candidato
+                FROM USUARIO u
+                LEFT JOIN CANDIDATO c ON c.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s
+                LIMIT 1;
+                """,
+                (email,),
+            )
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="Usuario no encontrado")
+            if row["rol"] != "Candidato":
+                raise HTTPException(status_code=403, detail="Solo candidatos pueden subir avatar")
+            if row["id_candidato"] is None:
+                cur.execute("INSERT INTO CANDIDATO (FK_ID_Usuario) VALUES (%s) RETURNING ID_Candidato;", (row["id_usuario"],))
+                newc = cur.fetchone()
+                id_candidato = newc["id_candidato"] if isinstance(newc, dict) else newc[0]
+            else:
+                id_candidato = row["id_candidato"]
+
+            cur.execute(
+                "UPDATE CANDIDATO SET Foto_Perfil_BIN = %s WHERE ID_Candidato = %s RETURNING ID_Candidato;",
+                (psycopg2.Binary(data_bytes), id_candidato),
+            )
+            conn.commit()
+            return {"message": "Avatar actualizado", "id_candidato": id_candidato}
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error upload avatar: {e}")
+        raise HTTPException(status_code=500, detail="Error interno subiendo avatar")
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+@app.get("/api/candidato/avatar")
+async def get_candidato_avatar(request: Request):
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    if not session_user or not isinstance(session_user, dict):
+        raise HTTPException(status_code=401, detail="No autenticado")
+    email = session_user.get("email")
+    if not email:
+        raise HTTPException(status_code=401, detail="No autenticado")
+
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT c.Foto_Perfil_BIN
+                FROM USUARIO u
+                JOIN CANDIDATO c ON c.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s AND c.Foto_Perfil_BIN IS NOT NULL
+                LIMIT 1;
+                """,
+                (email,),
+            )
+            row = cur.fetchone()
+            if not row or not row[0]:
+                raise HTTPException(status_code=404, detail="Sin avatar")
+            img_bytes = row[0]
+            return Response(content=img_bytes.tobytes() if hasattr(img_bytes, "tobytes") else img_bytes, media_type="image/png")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error get avatar: {e}")
+        raise HTTPException(status_code=500, detail="Error interno obteniendo avatar")
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+# ------------------------------------------
+# Candidato: Subida y descarga de CV propio
+# ------------------------------------------
+@app.post("/api/candidato/cv")
+async def upload_candidato_cv(request: Request, file: UploadFile = File(...)):
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    if not session_user or not isinstance(session_user, dict):
+        raise HTTPException(status_code=401, detail="No autenticado")
+    email = session_user.get("email")
+    if not email:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    if not file or not file.filename:
+        raise HTTPException(status_code=400, detail="Archivo requerido")
+    if (file.content_type or "") != "application/pdf":
+        raise HTTPException(status_code=400, detail="El CV debe ser PDF")
+    data_bytes = await file.read()
+    if not data_bytes:
+        raise HTTPException(status_code=400, detail="Archivo vacío")
+
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                """
+                SELECT u.ID_Usuario, u.Rol, c.ID_Candidato
+                FROM USUARIO u
+                LEFT JOIN CANDIDATO c ON c.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s
+                LIMIT 1;
+                """,
+                (email,),
+            )
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="Usuario no encontrado")
+            if row["rol"] != "Candidato":
+                raise HTTPException(status_code=403, detail="Solo candidatos pueden subir CV")
+            if row["id_candidato"] is None:
+                cur.execute("INSERT INTO CANDIDATO (FK_ID_Usuario) VALUES (%s) RETURNING ID_Candidato;", (row["id_usuario"],))
+                newc = cur.fetchone()
+                id_candidato = newc["id_candidato"] if isinstance(newc, dict) else newc[0]
+            else:
+                id_candidato = row["id_candidato"]
+
+            cur.execute(
+                "UPDATE CANDIDATO SET CV_PDF_BIN = %s WHERE ID_Candidato = %s RETURNING ID_Candidato;",
+                (psycopg2.Binary(data_bytes), id_candidato),
+            )
+            conn.commit()
+            return {"message": "CV actualizado", "id_candidato": id_candidato}
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error upload cv: {e}")
+        raise HTTPException(status_code=500, detail="Error interno subiendo CV")
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+@app.get("/api/candidato/cv")
+async def get_candidato_cv(request: Request):
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    if not session_user or not isinstance(session_user, dict):
+        raise HTTPException(status_code=401, detail="No autenticado")
+    email = session_user.get("email")
+    if not email:
+        raise HTTPException(status_code=401, detail="No autenticado")
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT c.CV_PDF_BIN, c.Nombre_Completo
+                FROM USUARIO u
+                JOIN CANDIDATO c ON c.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s AND c.CV_PDF_BIN IS NOT NULL
+                LIMIT 1;
+                """,
+                (email,),
+            )
+            row = cur.fetchone()
+            if not row or not row[0]:
+                raise HTTPException(status_code=404, detail="Sin CV")
+            cv_bytes, nombre = row[0], row[1] or "candidato"
+            filename = f"cv_{nombre}.pdf".replace(" ", "_")
+            headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+            return Response(content=cv_bytes.tobytes() if hasattr(cv_bytes, "tobytes") else cv_bytes, media_type="application/pdf", headers=headers)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error get cv: {e}")
+        raise HTTPException(status_code=500, detail="Error interno obteniendo CV")
     finally:
         try:
             conn.close()
