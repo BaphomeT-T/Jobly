@@ -47,13 +47,13 @@
   </style>
 </head>
 <body class="font-poppins bg-white text-neutral-10">
-  <!-- Header -->
-  <header class="w-full border-b border-neutral-70/30 flex items-center justify-between px-8 py-6">
-    <h1 class="text-3xl font-semibold"><span class="text-primary-100">Job</span>ly</h1>
-    <nav class="flex gap-10 text-[18px]">
-      <a href="#" class="text-primary-shade80 font-semibold border-b-2 border-primary-shade80 pb-1">Buscar Vacantes</a>
-      <a href="/ver-vacantes" class="text-neutral-40">Ver vacantes (Empresa)</a>
-      <a href="/actividades" class="text-neutral-40">Actividades</a>
+  <!-- Header (Figma-like) -->
+  <header class="w-full border-b border-neutral-80/40 flex items-center justify-between px-8 py-6">
+    <h1 class="text-3xl font-semibold select-none"><span class="text-primary-100">Job</span>ly</h1>
+    <nav class="flex gap-16 text-[20px] items-end">
+      <a href="/ver-aplicaciones" class="text-primary-shade80 font-semibold pb-1 border-b-2 border-primary-shade80">Buscar Vacantes</a>
+      <a href="/ver-aplicaciones?view=postulaciones" class="text-neutral-40 hover:text-neutral-20">Ver postulaciones</a>
+      <a href="/actividades" class="text-neutral-40 hover:text-neutral-20">Actividades</a>
     </nav>
     <div class="flex items-center gap-4">
       <span id="session-email" class="text-sm text-neutral-60"></span>
@@ -62,10 +62,10 @@
   </header>
 
   <!-- Search Bar -->
-  <section class="max-w-5xl mx-auto mt-8 px-4">
-    <div class="flex items-center bg-white border border-neutral-80 rounded-full h-20 px-8">
-      <input id="searchInput" type="text" placeholder="Junior / Intern Position" class="flex-1 outline-none text-neutral-80 placeholder-neutral-80" />
-      <button id="searchBtn" class="bg-primary-tint10 rounded-full w-14 h-14 flex items-center justify-center hover:bg-primary-shade80/10" title="Buscar">
+  <section class="w-full mx-auto mt-8 px-4">
+    <div class="mx-auto w-[808px] h-20 flex items-center bg-white border border-neutral-80 rounded-[64px] px-8">
+      <input id="searchInput" type="text" placeholder="Junior / Intern Position" class="flex-1 outline-none text-neutral-80 placeholder-neutral-80 text-[20px]" />
+      <button id="searchBtn" class="bg-primary-tint10 rounded-full w-16 h-16 flex items-center justify-center hover:bg-primary-shade80/10" title="Buscar">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-neutral-40">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1010.5 18a7.5 7.5 0 006.15-3.35z" />
         </svg>
@@ -74,15 +74,15 @@
   </section>
 
   <!-- Main layout -->
-  <main class="max-w-[1500px] mx-auto mt-10 px-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Vacantes List -->
-    <aside class="lg:col-span-1 space-y-4 overflow-y-auto max-h-[70vh] pr-1 no-scrollbar" id="vacantesList">
+  <main class="max-w-[1500px] mx-auto mt-10 px-4 flex gap-6">
+    <!-- Vacantes List (fixed width like Figma) -->
+    <aside class="w-[392px] space-y-4 overflow-y-auto max-h-[70vh] pr-1 no-scrollbar shrink-0" id="vacantesList">
       <!-- Job cards injected here -->
       <div id="loadingVacantes" class="text-sm text-neutral-60">Cargando vacantes...</div>
     </aside>
 
     <!-- Detalle Vacante -->
-    <section class="lg:col-span-2 bg-primary-tint02 rounded-md p-10 flex flex-col" id="detalleVacante">
+    <section class="flex-1 bg-primary-tint02 rounded-md p-12 border border-neutral-80/40" id="detalleVacante">
       <div id="detallePlaceholder" class="text-neutral-60">Selecciona una vacante para ver los detalles.</div>
     </section>
   </main>
@@ -180,15 +180,48 @@
     function renderDetalle(v){
       const cont = document.getElementById('detalleVacante');
       cont.innerHTML = '';
+
+      // Header block
       const header = document.createElement('div');
       header.className = 'flex justify-between items-start mb-6';
-      header.innerHTML = `\n+        <div>\n+          <p class='text-link text-sm font-semibold'>${v.nombre_empresa}</p>\n+          <h2 class='text-2xl font-semibold mt-2'>${v.titulo}</h2>\n+          <p class='text-sm text-neutral-50 mt-1'>${v.modalidad || ''}</p>\n+        </div>\n+        <div class='flex flex-col gap-4 items-end'>\n+          <button id='applyBtn' class='bg-primary-100 text-primary-shade05 px-6 py-3 rounded-full font-semibold hover:bg-primary-shade80 transition'>Postular</button>\n+          <span class='text-xs text-neutral-50'>${v.num_postulaciones} postulaciones</span>\n+        </div>`;
+      header.innerHTML = `
+        <div>
+          <p class='text-link text-sm font-semibold'>${v.nombre_empresa || ''}</p>
+          <h2 class='text-2xl font-semibold mt-2'>${v.titulo || ''}</h2>
+          <p class='text-sm text-neutral-50 mt-1'>${v.modalidad || ''}</p>
+        </div>
+        <div class='flex flex-col gap-4 items-end'>
+          <button id='applyBtn' class='bg-primary-100 text-primary-shade05 px-6 py-3 rounded-full font-semibold hover:bg-primary-shade80 transition'>Postular</button>
+          <span class='text-xs text-neutral-50'>${v.num_postulaciones ?? 0} postulaciones</span>
+        </div>`;
       cont.appendChild(header);
+
+      // "tab" row (visual only, Job Description active)
+      const tabs = document.createElement('div');
+      tabs.className = 'flex items-center gap-10 border-b border-neutral-80/60 pb-3 mb-6';
+      tabs.innerHTML = `
+        <div class='flex flex-col'>
+          <span class='text-neutral-20 font-semibold'>Job Description</span>
+          <span class='h-0.5 w-32 bg-neutral-80 mt-2'></span>
+        </div>
+        <span class='text-neutral-70'>Requirement</span>
+        <span class='text-neutral-70'>Benefit</span>
+        <span class='text-neutral-70'>Overview</span>`;
+      cont.appendChild(tabs);
+
+      // Body sections (primarily Job Description populated)
       const body = document.createElement('div');
       body.className='space-y-8 text-sm font-inter';
-      body.innerHTML = `\n+        <div>\n+          <h3 class='font-semibold text-neutral-20 text-base mb-2'>Descripción</h3>\n+          <p class='leading-relaxed'>${(v.descripcion||'Sin descripción')}</p>\n+        </div>`;
+      body.innerHTML = `
+        <section>
+          <h3 class='font-semibold text-neutral-20 text-base mb-3'>Job Description</h3>
+          <p class='leading-7 text-neutral-10'>${(v.descripcion || 'Sin descripción disponible.')}</p>
+        </section>
+      `;
       cont.appendChild(body);
-      document.getElementById('applyBtn').addEventListener('click',()=>applyToVacante(v.id_vacante));
+
+      const applyBtn = document.getElementById('applyBtn');
+      if (applyBtn) applyBtn.addEventListener('click',()=>applyToVacante(v.id_vacante || v.id));
     }
 
     async function applyToVacante(id){
