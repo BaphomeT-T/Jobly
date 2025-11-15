@@ -167,14 +167,25 @@
       list.appendChild(loading);
       try {
         const url = '/api/vacantes/publicadas' + (query ? ('?search=' + encodeURIComponent(query)) : '');
+        console.log('Fetching vacantes from:', url);
         const res = await fetch(url);
-        if(!res.ok) throw new Error('Error al obtener vacantes');
+        console.log('Response status:', res.status);
+        
+        if(!res.ok) {
+          const errorData = await res.json().catch(() => ({detail: 'Error desconocido'}));
+          console.error('Error response:', errorData);
+          throw new Error(errorData.detail || 'Error al obtener vacantes');
+        }
+        
         const data = await res.json();
+        console.log('Vacantes recibidas:', data);
         list.innerHTML='';
-        if(!data.vacantes.length){
-          list.innerHTML = '<p class="text-sm text-neutral-60">No se encontraron vacantes.</p>';
+        
+        if(!data.vacantes || !data.vacantes.length){
+          list.innerHTML = '<div class="text-sm text-neutral-60 p-4"><p class="font-semibold mb-2">No se encontraron vacantes publicadas.</p><p class="text-xs">Las empresas deben crear vacantes con estado "Publicada" para que aparezcan aquí.</p></div>';
           return;
         }
+        
         data.vacantes.forEach(v => renderVacanteCard(v));
         // Auto-select: prefer id from query param, otherwise first
         const params = new URLSearchParams(window.location.search);
@@ -190,7 +201,8 @@
           renderDetalle(data.vacantes[0]);
         }
       } catch(e){
-        list.innerHTML = '<p class="text-sm text-red-600">' + e.message + '</p>';
+        console.error('Error fetching vacantes:', e);
+        list.innerHTML = '<div class="text-sm text-red-600 p-4"><p class="font-semibold mb-2">❌ Error al cargar vacantes</p><p class="text-xs">' + e.message + '</p><p class="text-xs mt-2">Verifica: 1) Conexión a base de datos en .env, 2) Servidor corriendo, 3) Vacantes con estado "Publicada"</p></div>';
       }
     }
 
