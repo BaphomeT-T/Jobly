@@ -1354,7 +1354,7 @@ async def ver_aplicaciones_page():
 @app.get("/api/vacantes/publicadas")
 async def listar_vacantes_publicadas(request: Request, search: str | None = None):
     """Lista todas las vacantes publicadas visibles para candidatos.
-    Opcionalmente filtra por texto en título o nombre de empresa.
+    Opcionalmente filtra por texto en título, descripción, modalidad o nombre de empresa.
     Incluye conteo de postulaciones actuales."""
     conn = get_db_connection()
     if conn is None:
@@ -1362,9 +1362,9 @@ async def listar_vacantes_publicadas(request: Request, search: str | None = None
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             base_sql = """
-                SELECT v.ID_Vacante, v.Titulo, v.Descripcion, v.Modalidad, v.Estado, v.Fecha_Creacion,
+                SELECT v.ID_Vacante, v.Titulo, v.Descripcion, v.Salario, v.Modalidad, v.Estado, v.Fecha_Creacion,
                        e.Nombre_Empresa,
-                       COUNT(p.ID_Postulacion) AS num_postulaciones
+                       COALESCE(COUNT(p.ID_Postulacion), 0) AS num_postulaciones
                 FROM VACANTE v
                 JOIN EMPRESA e ON v.FK_ID_Empresa = e.ID_Empresa
                 LEFT JOIN POSTULACION p ON p.FK_ID_Vacante = v.ID_Vacante
@@ -1372,9 +1372,11 @@ async def listar_vacantes_publicadas(request: Request, search: str | None = None
             """
             params = []
             if search:
-                base_sql += " AND (LOWER(v.Titulo) LIKE %s OR LOWER(e.Nombre_Empresa) LIKE %s)"
+                base_sql += (
+                    " AND (LOWER(v.Titulo) LIKE %s OR LOWER(v.Descripcion) LIKE %s OR LOWER(v.Modalidad) LIKE %s OR LOWER(e.Nombre_Empresa) LIKE %s)"
+                )
                 s = f"%{search.lower()}%"
-                params.extend([s, s])
+                params.extend([s, s, s, s])
             base_sql += " GROUP BY v.ID_Vacante, e.Nombre_Empresa ORDER BY v.Fecha_Creacion DESC"
             cur.execute(base_sql, params)
             rows = cur.fetchall() or []
@@ -1384,11 +1386,12 @@ async def listar_vacantes_publicadas(request: Request, search: str | None = None
                     "id_vacante": r["id_vacante"],
                     "titulo": r["titulo"],
                     "descripcion": r["descripcion"],
+                    "salario": float(r["salario"]) if r.get("salario") is not None else None,
                     "modalidad": r["modalidad"],
                     "estado": r["estado"],
                     "fecha_creacion": r["fecha_creacion"].isoformat() if r["fecha_creacion"] else None,
                     "nombre_empresa": r["nombre_empresa"],
-                    "num_postulaciones": r["num_postulaciones"]
+                    "num_postulaciones": int(r["num_postulaciones"]) if r.get("num_postulaciones") is not None else 0
                 })
             return {"vacantes": vacantes}
     except Exception as e:
