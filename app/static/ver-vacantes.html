@@ -256,7 +256,6 @@
           <div class="flex items-center justify-between flex-1 h-[30px]">
             <div class="flex flex-col w-[220px]">
               <p class="text-[#1d1e1d] text-[16px] font-semibold leading-[1.2] truncate">${vacante.titulo}</p>
-              <p class="text-[#606261] text-[12px] leading-[1.2] truncate">${vacante.nombre_empresa || ''}</p>
             </div>
 
             <p class="capitalize text-[#333434] text-[16px] font-medium leading-[1.2] w-[150px]">${vacante.modalidad || 'N/A'}</p>
@@ -310,8 +309,8 @@
 
       try {
         if (loadingState) loadingState.classList.remove('hidden');
-        // Use public endpoint to list all published vacantes across companies
-        const response = await fetch('/api/vacantes/publicadas');
+        // Use empresa endpoint to list only THIS company's vacantes
+        const response = await fetch('/api/vacantes/empresa');
         
         if (!response.ok) {
           if (response.status === 401) {
