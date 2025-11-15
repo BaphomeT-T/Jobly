@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <base href="/">
+  <title>Home Postulantes - Jobly</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/static/auth.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family:'Poppins',sans-serif; }
+    .tab-active p { color:#f23e8e; font-weight:600; }
+    .tab-active .underline { height:3px; background:#f23e8e; width:100%; border-radius:2px; }
+  </style>
+</head>
+<body class="bg-[#fbfcfb] min-h-screen font-[Poppins,sans-serif] overflow-x-hidden">
+  <!-- Header -->
+  <header class="flex items-center justify-between px-[32px] pr-[108px] pt-[24px] pb-[16px] border-b border-[#e5eae8] h-[86px] bg-white">
+    <a href="/home-postulantes" class="block h-[62px] w-[172px]">
+      <img src="https://www.figma.com/api/mcp/asset/0f4d1cbe-9016-4ccd-93f0-5835e265c8d0" alt="Jobly Logo" class="h-full w-full object-contain" />
+    </a>
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-6">
+      <button id="profileBtn" aria-label="Perfil" class="w-6 h-6">
+        <img src="https://www.figma.com/api/mcp/asset/84257560-5a0d-4e74-a45d-f89b3dccf1a9" alt="Perfil" class="w-6 h-6" />
+      </button>
+    </div>
+  </header>
+
+  <!-- Subheader Tabs -->
+  <nav class="flex gap-[64px] items-end justify-center px-[108px] pt-[16px] pb-0 border-b border-[#e5eae8] h-[56px] bg-white relative">
+    <div class="flex flex-col gap-[16px] items-center justify-end relative cursor-pointer" onclick="window.location.href='/buscar-vacantes'">
+      <p class="text-[#606261] text-[20px] font-medium leading-[1.2]">Buscar vacantes</p>
+      <div class="h-0 underline w-full"></div>
+    </div>
+    <div class="flex flex-col gap-[16px] items-center justify-end relative cursor-pointer" onclick="window.location.href='/ver-postulaciones'">
+      <p class="text-[#606261] text-[20px] font-medium leading-[1.2]">Ver postulaciones</p>
+      <div class="h-0 underline w-full"></div>
+    </div>
+    <div class="flex flex-col gap-[14px] items-center justify-end relative tab-active">
+      <p class="text-[20px] leading-[1]">Actividades</p>
+      <div class="underline"></div>
+    </div>
+    <!-- Pattern decorations (reuse single asset) -->
+    <div class="absolute bottom-0 left-[78px] top-0 w-[127px] opacity-10 pointer-events-none overflow-hidden">
+      <img src="https://www.figma.com/api/mcp/asset/b6150ea1-4712-4188-97e7-7cce3d3223a8" alt="pattern" class="absolute h-[239%] left-[-5%] top-[-71%] w-[106%]" />
+    </div>
+    <div class="absolute bottom-0 left-[197px] top-0 w-[85px] opacity-10 pointer-events-none overflow-hidden">
+      <img src="https://www.figma.com/api/mcp/asset/b6150ea1-4712-4188-97e7-7cce3d3223a8" alt="pattern" class="absolute h-[239%] left-[-6%] top-[-71%] w-[158%]" />
+    </div>
+    <div class="absolute bottom-0 right-[129px] top-0 w-[58px] opacity-10 pointer-events-none overflow-hidden">
+      <img src="https://www.figma.com/api/mcp/asset/b6150ea1-4712-4188-97e7-7cce3d3223a8" alt="pattern" class="absolute h-[239%] left-[-59%] top-[-71%] w-[231%]" />
+    </div>
+    <div class="absolute bottom-0 right-0 top-0 w-[127px] opacity-10 pointer-events-none overflow-hidden">
+      <img src="https://www.figma.com/api/mcp/asset/b6150ea1-4712-4188-97e7-7cce3d3223a8" alt="pattern" class="absolute h-[239%] left-[-5%] top-[-71%] w-[106%]" />
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="px-[85px] pt-[48px] flex flex-row gap-12">
+    <section class="flex-1 max-w-[600px]">
+      <h1 class="text-[40px] font-semibold text-black leading-[1.2] mb-14">Recent Activities</h1>
+      <div class="bg-[#eff3f1] rounded-[4px] h-[252px] flex items-center justify-center">
+        <div class="w-[512px] text-center flex flex-col gap-4">
+          <p class="text-[24px] font-semibold text-black leading-[1.2]">No hay notificaciones</p>
+          <p class="text-[16px] font-medium font-[Inter,sans-serif] leading-[1.9] text-[#606261]">Pronto estará la información de los postulantes y entrevistas.</p>
+        </div>
+      </div>
+    </section>
+    <aside class="flex-1 flex items-center justify-center relative">
+      <!-- Illustration composed of layers -->
+      <div class="w-[380px] h-[420px] relative">
+        <img src="https://www.figma.com/api/mcp/asset/d58bcb03-54ad-41e4-ad8d-9e700b841f26" alt="body" class="absolute left-0 top-[50%] -translate-y-[50%] w-full" />
+        <img src="https://www.figma.com/api/mcp/asset/be4f2add-50bf-4bff-842b-c5f0ab048202" alt="head" class="absolute left-[55%] top-[33%] w-[140px] -translate-x-[50%]" />
+        <img src="https://www.figma.com/api/mcp/asset/d9c6daab-56c0-4a0d-b3f9-37c91d3bfc88" alt="face" class="absolute left-[56%] top-[41%] w-[120px] -translate-x-[50%]" />
+      </div>
+    </aside>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-24 border-t border-[#e5eae8] bg-white px-[108px] py-[24px] flex flex-col gap-8">
+    <div class="flex justify-end">
+      <div class="h-[67px] w-[186px]">
+        <img src="https://www.figma.com/api/mcp/asset/0f4d1cbe-9016-4ccd-93f0-5835e265c8d0" alt="Jobly Logo" class="h-full w-full object-contain" />
+      </div>
+    </div>
+    <div class="flex justify-center items-center gap-2 text-[12px] font-medium text-black/50">
+      <span>Jobly Copyright</span>
+      <img src="https://www.figma.com/api/mcp/asset/3f93c97c-298d-429d-828f-828701cfcb2a" alt="copyright" class="w-6 h-6" />
+      <span>2025</span>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Ensure user is authenticated and role is Candidato
+      if (window.currentUser && window.currentUser.rol !== 'Candidato') {
+        // Redirect empresa users
+        window.location.href = '/home-empresa';
+      }
+      document.getElementById('profileBtn')?.addEventListener('click', () => {
+        window.location.href = '/editar-perfil';
+      });
+    });
+  </script>
+</body>
+</html>

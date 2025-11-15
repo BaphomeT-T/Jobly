@@ -115,6 +115,11 @@ async def empleado_step3():
 async def home_empleados():
     return _serve_static_html("home-empleados.html", "Home Empleados")
 
+# Nuevo home para postulantes (candidatos)
+@app.get("/home-postulantes", response_class=HTMLResponse)
+async def home_postulantes():
+    return _serve_static_html("home-postulantes.html", "Home Postulantes")
+
 # Ruta para login
 @app.get("/login", response_class=HTMLResponse)
 async def serve_login():
@@ -139,6 +144,12 @@ async def ver_vacantes():
 @app.get("/editar-vacante", response_class=HTMLResponse)
 async def editar_vacante():
     return _serve_static_html("editar-vacante.html", "Editar Vacante")
+
+
+@app.get("/editar-perfil", response_class=HTMLResponse)
+async def editar_perfil():
+    """Sirve la página de editar perfil creada desde diseño Figma."""
+    return _serve_static_html("editar-perfil.html", "Editar Perfil")
 
 # API: Obtener vacantes de una empresa por email
 @app.get("/api/vacantes/empresa")
@@ -425,7 +436,8 @@ async def login_user(request: Request, email: str = Form(...), password: str = F
                 raise HTTPException(status_code=401, detail="Credenciales incorrectas")
             
             rol = user["rol"]
-            redirect = "/home-empresa" if rol == "Empresa" else "/home-empleados"
+            # Redirigir según rol: Empresa -> /home-empresa, Candidato -> /home-postulantes
+            redirect = "/home-empresa" if rol == "Empresa" else "/home-postulantes"
 
             # Guardar la información mínima en sesión (cookie firmada)
             try:
