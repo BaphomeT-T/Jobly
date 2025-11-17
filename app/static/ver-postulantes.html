@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <base href="/">
+  <title>Ver Postulantes - Jobly</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/static/auth.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-white min-h-screen font-['Poppins',sans-serif] overflow-x-hidden flex flex-col">
+  <!-- Header -->
+  <header class="flex items-center justify-between px-[32px] pl-[32px] pr-[108px] pt-[24px] pb-[16px] border-b border-[#e5eae8] h-[86px] bg-white">
+    <a href="/home-empresa" class="block h-[62px] w-[172px]">
+      <img src="/static/images/logo-login.png" alt="Jobly Logo" class="h-full w-full object-contain" 
+           onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27172%27 height=%2762%27%3E%3Crect width=%27172%27 height=%2762%27 fill=%27%23f23e8e%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-size=%2720%27%3EJobly%3C/text%3E%3C/svg%3E'" />
+    </a>
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-6">
+      <!-- Help Icon -->
+      <svg class="w-6 h-6 cursor-pointer" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="#141514" stroke-width="1.5"/>
+        <path d="M9.09 9C9.325 8.33 9.835 7.81 10.5 7.57C11.165 7.33 11.903 7.39 12.516 7.74C13.129 8.09 13.563 8.69 13.72 9.38C13.877 10.07 13.745 10.79 13.35 11.38C12.955 11.97 12.33 12.38 11.62 12.51V13.5" stroke="#141514" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="12" cy="17" r="1" fill="#141514"/>
+      </svg>
+      <!-- Mail Icon -->
+      <svg class="w-6 h-6 cursor-pointer" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M22 6L12 13L2 6" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <!-- Profile Icon (Purple) -->
+      <svg class="w-6 h-6 cursor-pointer" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="#c89bfa"/>
+        <circle cx="12" cy="10" r="3" fill="white"/>
+        <path d="M6.168 18.849A6.5 6.5 0 0 1 12 15.5a6.5 6.5 0 0 1 5.832 3.349" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <!-- Logout Button -->
+      <button id="logoutBtn" class="border border-[#141514] text-[#141514] px-3 py-1 rounded-[24px] text-sm font-semibold hover:bg-[#141514] hover:text-white transition-colors">
+        Cerrar sesión
+      </button>
+    </div>
+  </header>
+
+  <!-- Subheader -->
+  <section class="flex gap-[64px] items-end justify-center px-[108px] pt-[16px] pb-0 border-b border-[#e5eae8] h-[56px] bg-white relative">
+    <!-- Tab 1: Nueva Vacante -->
+    <div class="flex flex-col gap-[14px] items-center justify-center max-w-[130px] cursor-pointer tab-item" data-tab="nueva-vacante" onclick="window.location.href='/realizar-vacante'">
+      <p class="text-[#606261] text-[20px] font-medium text-center leading-[1.2] whitespace-nowrap tab-text">Nueva Vacante</p>
+      <div class="w-full h-[3px] bg-transparent tab-line"></div>
+    </div>
+    
+    <!-- Tab 2: Ver Vacantes (Active) -->
+    <div class="flex flex-col gap-[14px] items-center justify-center max-w-[130px] cursor-pointer tab-item active" data-tab="ver-vacantes">
+      <p class="text-[#c89bfa] text-[20px] font-semibold text-center leading-[1] whitespace-nowrap tab-text">Ver Vacantes</p>
+      <div class="w-full h-[3px] bg-gradient-to-r from-transparent via-[#c89bfa] to-transparent tab-line"></div>
+    </div>
+    
+    <!-- Tab 3: Actividades -->
+    <div class="flex flex-col gap-[14px] items-center justify-center max-w-[130px] cursor-pointer tab-item" data-tab="actividades" onclick="window.location.href='/home-empresa'">
+      <p class="text-[#606261] text-[20px] font-medium text-center leading-[1.2] whitespace-nowrap tab-text">Actividades</p>
+      <div class="w-full h-[3px] bg-transparent tab-line"></div>
+    </div>
+    
+    <!-- Pattern decorations -->
+    <div class="absolute bottom-0 left-[78px] top-0 w-[127px] opacity-10 pointer-events-none overflow-hidden">
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-5.51%] top-[-71.43%] w-[105.51%] object-cover" 
+           onerror="this.style.display='none'" />
+    </div>
+    <div class="absolute bottom-0 left-[197px] top-0 w-[85px] opacity-10 pointer-events-none overflow-hidden">
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-5.88%] top-[-71.43%] w-[157.65%] object-cover" 
+           onerror="this.style.display='none'" />
+    </div>
+    <div class="absolute bottom-0 right-[129px] top-0 w-[58px] opacity-10 pointer-events-none overflow-hidden">
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-58.62%] top-[-71.43%] w-[231.03%] object-cover" 
+           onerror="this.style.display='none'" />
+    </div>
+    <div class="absolute bottom-0 right-0 top-0 w-[127px] opacity-10 pointer-events-none overflow-hidden">
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-5.51%] top-[-71.43%] w-[105.51%] object-cover" 
+           onerror="this.style.display='none'" />
+    </div>
+  </section>
+
+  <!-- Back Button -->
+  <div class="absolute top-[144px] left-[108px] cursor-pointer" onclick="window.history.back()">
+    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19 12H5M12 19L5 12L12 5" stroke="#141514" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- Main Content -->
+  <main class="px-[108px] pt-[80px] pb-[40px] flex-1">
+    <!-- Título -->
+    <h1 class="text-[40px] font-semibold text-black leading-[1.2] mb-[64px]">Postulantes</h1>
+
+    <!-- Search Bar -->
+    <div class="border border-[#b8bdbb] rounded-[50px] px-[24px] py-[24px] h-[69px] flex items-center gap-[24px] mb-[42px] max-w-[599px]">
+      <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="11" cy="11" r="7" stroke="#141514" stroke-width="1.5"/>
+        <path d="M20 20L17 17" stroke="#141514" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input 
+        type="text" 
+        id="searchInput"
+        placeholder="Search and Filter" 
+        class="text-[18px] font-medium text-[#a2a6a4] outline-none border-none bg-transparent flex-1 placeholder:text-[#a2a6a4]"
+      />
+    </div>
+
+    <!-- Filter Chips -->
+    <div class="flex gap-[24px] items-center mb-[42px]" id="filterChips">
+      <div class="bg-white border border-[#e5eae8] px-[16px] py-[8px] rounded-[24px] h-[40px] flex items-center justify-center cursor-pointer hover:bg-[#f7f9f8] transition-colors" data-filter="Oferta">
+        <p class="text-[14px] font-medium text-[#141514] leading-[1.2]">Oferta</p>
+      </div>
+      <div class="bg-white border border-[#e5eae8] px-[16px] py-[8px] rounded-[24px] h-[40px] flex items-center justify-center cursor-pointer hover:bg-[#f7f9f8] transition-colors" data-filter="Rechazada">
+        <p class="text-[14px] font-medium text-[#141514] leading-[1.2]">Rechazado</p>
+      </div>
+      <div class="bg-[#9466cc] px-[16px] py-[8px] rounded-[24px] h-[40px] flex items-center justify-center cursor-pointer" data-filter="Revisión">
+        <p class="text-[14px] font-medium text-white leading-[1.2]">En revisión</p>
+      </div>
+      <div class="bg-white border border-[#e5eae8] px-[16px] py-[8px] rounded-[24px] h-[40px] flex items-center justify-center cursor-pointer hover:bg-[#f7f9f8] transition-colors" data-filter="Entrevista">
+        <p class="text-[14px] font-medium text-[#141514] leading-[1.2]">Entrevista</p>
+      </div>
+    </div>
+
+    <!-- Table Header -->
+    <div class="px-[24px] py-[16px] flex items-center gap-[40px]">
+      <!-- Empty space for profile pic -->
+      <div class="w-[48px] h-[48px] opacity-0"></div>
+      
+      <!-- Column Headers -->
+      <div class="flex items-center justify-between flex-1">
+        <div class="flex items-center gap-[8px] max-w-[208px] pl-0 pr-[16px] py-[12px]">
+          <p class="capitalize text-[#b080e8] text-[14px] font-medium leading-[1.2] tracking-[0.28px]">Applicant Name</p>
+          <div class="w-[24px] h-[24px]"></div>
+        </div>
+        
+        <div class="w-[136px]"></div>
+        
+        <div class="flex items-center gap-[8px] max-w-[208px] w-[208px] pl-0 pr-[16px] py-[12px]">
+          <p class="capitalize text-[#b080e8] text-[14px] font-medium leading-[1.2] tracking-[0.28px]">Fecha Postulación</p>
+        </div>
+        
+        <div class="flex items-center gap-[8px] max-w-[208px] w-[115px] pl-0 pr-[16px] py-[12px]">
+          <p class="capitalize text-[#b080e8] text-[14px] font-medium leading-[1.2] tracking-[0.28px]">estado</p>
+          <div class="w-[24px] h-[24px]"></div>
+        </div>
+        
+        <p class="text-[16px] font-medium leading-[1.9] max-w-[100px] text-transparent">View Details</p>
+      </div>
+    </div>
+
+    <!-- Table Body (Dynamic) -->
+    <div id="postulantesTableBody" class="space-y-2"></div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-[#e5eae8] px-[108px] py-[24px] flex flex-col gap-[48px] items-center bg-white h-[235px] mt-auto">
+    <div class="flex gap-[32px] items-end w-[1368px]">
+      <div class="flex-1"></div>
+      <div class="flex flex-col gap-[16px] items-end w-[156px]">
+        <img src="/static/images/logo-login.png" alt="Jobly Logo" class="h-[67px] w-[186px] object-cover" 
+             onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27186%27 height=%2767%27%3E%3Crect width=%27186%27 height=%2767%27 fill=%27%23f23e8e%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-size=%2724%27%3EJobly%3C/text%3E%3C/svg%3E'" />
+      </div>
+    </div>
+    <div class="flex items-center justify-center w-full relative">
+      <div class="flex items-center justify-center">
+        <p class="capitalize text-[12px] font-medium leading-[1.2] text-[rgba(0,0,0,0.5)]">Jobly Copyright</p>
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/>
+          <path d="M14.5 9.5C14.5 8.5 13.5 7.5 12 7.5C10.5 7.5 9.5 8.5 9.5 9.5C9.5 10.5 10.5 11 12 11C13.5 11 14.5 11.5 14.5 12.5C14.5 13.5 13.5 14.5 12 14.5C10.5 14.5 9.5 13.5 9.5 12.5" stroke="rgba(0,0,0,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <p class="capitalize text-[12px] font-medium leading-[1.2] text-[rgba(0,0,0,0.5)]">2025</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Get vacancy ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const vacanteId = urlParams.get('id');
+    
+    let allPostulantes = [];
+    let currentFilter = 'Revisión'; // Default filter
+
+    // Función para formatear fecha
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      const month = months[date.getMonth()];
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+
+    // Map estado from DB to display text
+    function mapEstado(estado) {
+      const raw = (estado || '').toString().trim();
+      const key = raw
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // quitar acentos
+        .toLowerCase();
+      // normalizar a etiquetas de UI
+      if (key === 'recibida' || key === 'revision' || key === 'en revision') return 'En revisión';
+      if (key === 'entrevista') return 'Entrevista';
+      if (key === 'oferta') return 'Oferta';
+      if (key === 'rechazada' || key === 'rechazado') return 'Rechazado';
+      return raw || 'En revisión';
+    }
+
+    // Función para crear una fila de postulante
+    function createPostulanteRow(postulante, index) {
+      const bgClass = index % 2 === 0 ? 'bg-[#f7f9f8]' : 'bg-white';
+      const borderClass = index === 0 ? 'border border-[#a2a6a4]' : '';
+      
+      // Get profile photo or use placeholder
+      const photoSrc = postulante.foto_perfil_url || 
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(postulante.nombre_completo || 'Unknown')}&background=c89bfa&color=fff&size=48`;
+
+      return `
+        <div class="${bgClass} ${borderClass} px-[24px] py-[16px] rounded-[4px] flex items-center gap-[40px]">
+          <!-- Profile Photo -->
+          <div class="w-[48px] h-[48px] rounded-full border border-[#e5eae8] overflow-hidden shrink-0">
+            <img src="${photoSrc}" alt="${postulante.nombre_completo}" class="w-full h-full object-cover" 
+                 onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(postulante.nombre_completo || 'Unknown')}&background=c89bfa&color=fff&size=48'" />
+          </div>
+
+          <!-- Content -->
+          <div class="flex items-center justify-between flex-1">
+            <!-- Name -->
+            <div class="flex-1 max-w-[208px]">
+              <p class="text-[#1d1e1d] text-[16px] font-semibold leading-[1.2] truncate">${postulante.nombre_completo || 'Sin nombre'}</p>
+            </div>
+
+            <!-- Notas Link -->
+            <div class="flex-1 max-w-[208px]">
+              <p class="capitalize text-[#6532c1] text-[16px] font-medium leading-[1.2] cursor-pointer hover:underline" onclick="verNotas(${postulante.id_postulacion})">Notas</p>
+            </div>
+
+            <!-- Fecha -->
+            <div class="flex-1 max-w-[208px]">
+              <p class="text-[#333434] text-[14px] font-medium leading-[1.9]">${formatDate(postulante.fecha_postulacion)}</p>
+            </div>
+
+            <!-- Estado Dropdown -->
+            <div class="flex-1 max-w-[208px] relative">
+              <div class="flex items-center gap-[10px]">
+                <select 
+                  class="text-[#333434] text-[16px] font-medium leading-[1.9] bg-transparent border-none outline-none appearance-none cursor-pointer w-[208px]"
+                  onchange="updateEstado(${postulante.id_postulacion}, this.value)"
+                >
+                  <option value="Revisión" ${postulante.estado_proceso === 'Revisión' || postulante.estado_proceso === 'Recibida' ? 'selected' : ''}>En revisión</option>
+                  <option value="Entrevista" ${postulante.estado_proceso === 'Entrevista' ? 'selected' : ''}>Entrevista</option>
+                  <option value="Oferta" ${postulante.estado_proceso === 'Oferta' ? 'selected' : ''}>Oferta</option>
+                  <option value="Rechazada" ${postulante.estado_proceso === 'Rechazada' ? 'selected' : ''}>Rechazado</option>
+                </select>
+                <svg class="w-[24px] h-[24px] pointer-events-none absolute left-[80px] top-[3px]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 10L12 15L17 10" stroke="#333434" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Ver CV Link -->
+            <div class="max-w-[100px]">
+              <p class="text-[#6532c1] text-[16px] font-medium leading-[1.9] cursor-pointer hover:underline" onclick="verCV(${postulante.id_candidato})">Ver CV</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Ver CV del candidato
+    function verCV(idCandidato) {
+      if (!idCandidato) {
+        alert('ID de candidato no disponible');
+        return;
+      }
+      // Redirect to download CV endpoint
+      window.open('/api/candidatos/' + idCandidato + '/cv', '_blank');
+    }
+
+    // Ver notas de la postulación
+    function verNotas(idPostulacion) {
+      if (!idPostulacion) {
+        alert('ID de postulación no disponible');
+        return;
+      }
+      // TODO: Implement notes modal/page
+      alert('Función de notas en desarrollo. ID Postulación: ' + idPostulacion);
+    }
+
+    // Update estado de postulación
+    async function updateEstado(idPostulacion, nuevoEstado) {
+      try {
+        const response = await fetch('/api/postulaciones/' + idPostulacion + '/estado', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ estado: nuevoEstado })
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al actualizar estado');
+        }
+
+        // Reload postulantes to reflect changes
+        await loadPostulantes();
+        
+        // Show success message
+        showSuccessMessage('Estado actualizado correctamente');
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al actualizar el estado. Por favor intenta nuevamente.');
+        // Reload to reset
+        await loadPostulantes();
+      }
+    }
+
+    // Show success message
+    function showSuccessMessage(message) {
+      const div = document.createElement('div');
+      div.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      div.textContent = message;
+      document.body.appendChild(div);
+      setTimeout(() => div.remove(), 3000);
+    }
+
+    // Render function
+    function renderPostulantes(list) {
+      const tableBody = document.getElementById('postulantesTableBody');
+      tableBody.innerHTML = '';
+      if (!list || list.length === 0) {
+        tableBody.innerHTML = '<div class="text-center py-12 text-[#606261]">No hay postulantes para esta vacante</div>';
+        return;
+      }
+      tableBody.innerHTML = list.map((p, i) => createPostulanteRow(p, i)).join('');
+    }
+
+    // Load postulantes for this vacancy
+    async function loadPostulantes() {
+      const tableBody = document.getElementById('postulantesTableBody');
+      if (!vacanteId) {
+        tableBody.innerHTML = '<div class="text-center py-12 text-red-600">ID de vacante no especificado</div>';
+        return;
+      }
+
+      try {
+        tableBody.innerHTML = '<div class="text-center py-12 text-[#606261]">Cargando postulantes...</div>';
+        
+        const response = await fetch('/api/vacantes/' + vacanteId + '/postulaciones');
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            window.location.href = '/login';
+            return;
+          }
+          throw new Error('Error al cargar postulantes');
+        }
+
+        const data = await response.json();
+        allPostulantes = data.postulaciones || [];
+
+        // Apply current filter
+        applyFilter(currentFilter);
+
+      } catch (error) {
+        console.error('Error:', error);
+        tableBody.innerHTML = '<div class="text-center py-12 text-red-600">Error al cargar los postulantes. Por favor intenta nuevamente.</div>';
+      }
+    }
+
+    // Apply filter
+    function applyFilter(filterValue) {
+      currentFilter = filterValue;
+      
+      // Update chip styles
+      const chips = document.querySelectorAll('[data-filter]');
+      chips.forEach(chip => {
+        const chipFilter = chip.getAttribute('data-filter');
+        if (chipFilter === filterValue) {
+          chip.classList.remove('bg-white', 'border', 'border-[#e5eae8]', 'hover:bg-[#f7f9f8]');
+          chip.classList.add('bg-[#9466cc]');
+          chip.querySelector('p').classList.remove('text-[#141514]');
+          chip.querySelector('p').classList.add('text-white');
+        } else {
+          chip.classList.remove('bg-[#9466cc]');
+          chip.classList.add('bg-white', 'border', 'border-[#e5eae8]', 'hover:bg-[#f7f9f8]');
+          chip.querySelector('p').classList.remove('text-white');
+          chip.querySelector('p').classList.add('text-[#141514]');
+        }
+      });
+
+      // Filter postulantes
+      const filtered = allPostulantes.filter(p => {
+        const estado = mapEstado(p.estado_proceso);
+        if (filterValue === 'Revisión') {
+          return estado === 'En revisión';
+        } else if (filterValue === 'Rechazada') {
+          return estado === 'Rechazado';
+        }
+        return estado === filterValue;
+      });
+
+      renderPostulantes(filtered);
+    }
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      const searchTerm = (e.target.value || '').toLowerCase().trim();
+      if (!searchTerm) {
+        applyFilter(currentFilter);
+        return;
+      }
+      
+      const filtered = allPostulantes.filter(p => {
+        const estado = mapEstado(p.estado_proceso);
+        // Apply current filter first
+        let matchesFilter = false;
+        if (currentFilter === 'Revisión') {
+          matchesFilter = estado === 'En revisión';
+        } else if (currentFilter === 'Rechazada') {
+          matchesFilter = estado === 'Rechazado';
+        } else {
+          matchesFilter = estado === currentFilter;
+        }
+        
+        if (!matchesFilter) return false;
+        
+        // Then apply search
+        const txt = ((p.nombre_completo||'') + ' ' + (p.email||'')).toLowerCase();
+        return txt.includes(searchTerm);
+      });
+      
+      renderPostulantes(filtered);
+    });
+
+    // Chip click handlers
+    document.querySelectorAll('[data-filter]').forEach(chip => {
+      chip.addEventListener('click', function() {
+        const filterValue = this.getAttribute('data-filter');
+        applyFilter(filterValue);
+      });
+    });
+
+    // Load postulantes on page load
+    document.addEventListener('DOMContentLoaded', loadPostulantes);
+  </script>
+</body>
+</html>

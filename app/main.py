@@ -5,6 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel
+from typing import Optional
 import psycopg2
 import psycopg2.extras
 import re
@@ -916,6 +917,85 @@ async def update_candidato_perfil(data: CandidateProfileUpdate, request: Request
         except Exception:
             pass
 
+# ----------------------------------------------------
+# 5. Vacantes públicas y postulaciones (Candidato)
+# ----------------------------------------------------
+
+@app.get("/ver-aplicaciones", response_class=HTMLResponse)
+async def ver_aplicaciones_page():
+    """Página para que el candidato vea vacantes y pueda postular."""
+    return _serve_static_html("Ver-aplicaciones.html", "Ver Aplicaciones")
+
+# Nueva página: ver postulantes (empresa ve candidatos por vacante)
+@app.get("/ver-postulantes", response_class=HTMLResponse)
+async def ver_postulantes_page():
+    """Página para que la empresa vea los postulantes de una vacante."""
+    return _serve_static_html("ver-postulantes.html", "Ver Postulantes")
+
+# Nueva página: ver postulaciones (listado de mis aplicaciones) segun diseño Figma
+@app.get("/ver-postulaciones", response_class=HTMLResponse)
+async def ver_postulaciones_page():
+    """Página para que el candidato vea el listado de sus postulaciones."""
+    return _serve_static_html("ver-postulaciones.html", "Ver Postulaciones")
+
+@app.get("/api/vacantes/publicadas")
+async def listar_vacantes_publicadas(request: Request, search: Optional[str] = None):
+    """Lista todas las vacantes publicadas visibles para candidatos.
+    Opcionalmente filtra por texto en título, descripción, modalidad o nombre de empresa.
+    Incluye conteo de postulaciones actuales."""
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            base_sql = """
+                SELECT v.ID_Vacante, v.Titulo, v.Descripcion, v.Salario, v.Modalidad, v.Estado, v.Fecha_Creacion,
+                       e.Nombre_Empresa,
+                       COALESCE(COUNT(p.ID_Postulacion), 0) AS num_postulaciones
+                FROM VACANTE v
+                JOIN EMPRESA e ON v.FK_ID_Empresa = e.ID_Empresa
+                LEFT JOIN POSTULACION p ON p.FK_ID_Vacante = v.ID_Vacante
+                WHERE v.Estado = 'Publicada'
+            """
+            params = []
+            if search:
+                base_sql += (
+                    " AND (LOWER(v.Titulo) LIKE %s OR LOWER(v.Descripcion) LIKE %s OR LOWER(v.Modalidad) LIKE %s OR LOWER(e.Nombre_Empresa) LIKE %s)"
+                )
+                s = f"%{search.lower()}%"
+                params.extend([s, s, s, s])
+            # Importante: incluir TODAS las columnas seleccionadas (no agregadas) en el GROUP BY para Postgres
+            base_sql += " GROUP BY v.ID_Vacante, v.Titulo, v.Descripcion, v.Salario, v.Modalidad, v.Estado, v.Fecha_Creacion, e.Nombre_Empresa ORDER BY v.Fecha_Creacion DESC"
+            
+            logger.info(f"Ejecutando query para vacantes publicadas. Search: {search}")
+            cur.execute(base_sql, params)
+            rows = cur.fetchall() or []
+            logger.info(f"Vacantes encontradas: {len(rows)}")
+            
+            vacantes = []
+            for r in rows:
+                # Usar .get() con nombres en minúsculas (RealDictCursor los convierte automáticamente)
+                vacante = {
+                    "id_vacante": r.get("id_vacante") or r.get("ID_Vacante"),
+                    "titulo": r.get("titulo") or r.get("Titulo"),
+                    "descripcion": r.get("descripcion") or r.get("Descripcion"),
+                    "salario": float(r.get("salario") or r.get("Salario")) if (r.get("salario") or r.get("Salario")) is not None else None,
+                    "modalidad": r.get("modalidad") or r.get("Modalidad"),
+                    "estado": r.get("estado") or r.get("Estado"),
+                    "fecha_creacion": (r.get("fecha_creacion") or r.get("Fecha_Creacion")).isoformat() if (r.get("fecha_creacion") or r.get("Fecha_Creacion")) else None,
+                    "nombre_empresa": r.get("nombre_empresa") or r.get("Nombre_Empresa"),
+                    "num_postulaciones": int(r.get("num_postulaciones", 0))
+                }
+                vacantes.append(vacante)
+                
+            logger.info(f"Devolviendo {len(vacantes)} vacantes")
+            return {"vacantes": vacantes}
+    except Exception as e:
+        logger.error(f"Error listar_vacantes_publicadas: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error interno listando vacantes: {str(e)}")
+    finally:
+        try: conn.close()
+        except Exception: pass
 
 @app.get("/api/vacantes/{id_vacante}")
 async def get_vacante_by_id(id_vacante: int, request: Request):
@@ -1342,73 +1422,246 @@ def is_valid_ruc_ec(ruc: str) -> bool:
     except Exception:
         return False
 
+
 # ----------------------------------------------------
-# 5. Vacantes públicas y postulaciones (Candidato)
+# 6. Empresa: Postulaciones por vacante + acciones
 # ----------------------------------------------------
 
-@app.get("/ver-aplicaciones", response_class=HTMLResponse)
-async def ver_aplicaciones_page():
-    """Página para que el candidato vea vacantes y pueda postular."""
-    return _serve_static_html("Ver-aplicaciones.html", "Ver Aplicaciones")
+@app.get("/api/vacantes/{id_vacante}/postulaciones")
+async def listar_postulaciones_por_vacante(id_vacante: int, request: Request):
+    """Devuelve las postulaciones de una vacante que pertenece a la empresa autenticada."""
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    if not session_user or not isinstance(session_user, dict):
+        raise HTTPException(status_code=401, detail="No autenticado")
+    if session_user.get("rol") != "Empresa":
+        raise HTTPException(status_code=403, detail="Solo empresas")
 
-@app.get("/api/vacantes/publicadas")
-async def listar_vacantes_publicadas(request: Request, search: str | None = None):
-    """Lista todas las vacantes publicadas visibles para candidatos.
-    Opcionalmente filtra por texto en título, descripción, modalidad o nombre de empresa.
-    Incluye conteo de postulaciones actuales."""
+    email = session_user.get("email")
     conn = get_db_connection()
     if conn is None:
         raise HTTPException(status_code=500, detail="Error de conexión a la DB")
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-            base_sql = """
-                SELECT v.ID_Vacante, v.Titulo, v.Descripcion, v.Salario, v.Modalidad, v.Estado, v.Fecha_Creacion,
-                       e.Nombre_Empresa,
-                       COALESCE(COUNT(p.ID_Postulacion), 0) AS num_postulaciones
-                FROM VACANTE v
+            # Obtener empresa dueña
+            cur.execute(
+                """
+                SELECT e.ID_Empresa
+                FROM EMPRESA e
+                JOIN USUARIO u ON e.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s
+                LIMIT 1;
+                """,
+                (email,),
+            )
+            emp = cur.fetchone()
+            if not emp:
+                raise HTTPException(status_code=404, detail="Empresa no encontrada")
+            id_empresa = emp["id_empresa"]
+
+            # Verificar que la vacante pertenezca a la empresa
+            cur.execute(
+                """
+                SELECT 1
+                FROM VACANTE
+                WHERE ID_Vacante = %s AND FK_ID_Empresa = %s
+                LIMIT 1;
+                """,
+                (id_vacante, id_empresa),
+            )
+            if not cur.fetchone():
+                raise HTTPException(status_code=404, detail="Vacante no encontrada o no autorizada")
+
+            # Listar postulaciones con info básica del candidato
+            cur.execute(
+                """
+                SELECT p.ID_Postulacion, p.Fecha_Postulacion, p.Estado_Proceso,
+                       c.ID_Candidato, c.Nombre_Completo,
+                       u.Email,
+                       (c.Foto_Perfil_BIN IS NOT NULL) AS tiene_foto,
+                       (c.CV_PDF_BIN IS NOT NULL) AS tiene_cv
+                FROM POSTULACION p
+                JOIN CANDIDATO c ON p.FK_ID_Candidato = c.ID_Candidato
+                JOIN VACANTE v ON p.FK_ID_Vacante = v.ID_Vacante
                 JOIN EMPRESA e ON v.FK_ID_Empresa = e.ID_Empresa
-                LEFT JOIN POSTULACION p ON p.FK_ID_Vacante = v.ID_Vacante
-                WHERE v.Estado = 'Publicada'
-            """
-            params = []
-            if search:
-                base_sql += (
-                    " AND (LOWER(v.Titulo) LIKE %s OR LOWER(v.Descripcion) LIKE %s OR LOWER(v.Modalidad) LIKE %s OR LOWER(e.Nombre_Empresa) LIKE %s)"
-                )
-                s = f"%{search.lower()}%"
-                params.extend([s, s, s, s])
-            # Importante: incluir TODAS las columnas seleccionadas (no agregadas) en el GROUP BY para Postgres
-            base_sql += " GROUP BY v.ID_Vacante, v.Titulo, v.Descripcion, v.Salario, v.Modalidad, v.Estado, v.Fecha_Creacion, e.Nombre_Empresa ORDER BY v.Fecha_Creacion DESC"
-            
-            logger.info(f"Ejecutando query para vacantes publicadas. Search: {search}")
-            cur.execute(base_sql, params)
+                JOIN USUARIO u ON c.FK_ID_Usuario = u.ID_Usuario
+                WHERE p.FK_ID_Vacante = %s AND e.ID_Empresa = %s
+                ORDER BY p.Fecha_Postulacion DESC;
+                """,
+                (id_vacante, id_empresa),
+            )
             rows = cur.fetchall() or []
-            logger.info(f"Vacantes encontradas: {len(rows)}")
-            
-            vacantes = []
+
+            lst = []
             for r in rows:
-                # Usar .get() con nombres en minúsculas (RealDictCursor los convierte automáticamente)
-                vacante = {
-                    "id_vacante": r.get("id_vacante") or r.get("ID_Vacante"),
-                    "titulo": r.get("titulo") or r.get("Titulo"),
-                    "descripcion": r.get("descripcion") or r.get("Descripcion"),
-                    "salario": float(r.get("salario") or r.get("Salario")) if (r.get("salario") or r.get("Salario")) is not None else None,
-                    "modalidad": r.get("modalidad") or r.get("Modalidad"),
-                    "estado": r.get("estado") or r.get("Estado"),
-                    "fecha_creacion": (r.get("fecha_creacion") or r.get("Fecha_Creacion")).isoformat() if (r.get("fecha_creacion") or r.get("Fecha_Creacion")) else None,
-                    "nombre_empresa": r.get("nombre_empresa") or r.get("Nombre_Empresa"),
-                    "num_postulaciones": int(r.get("num_postulaciones", 0))
+                foto_url = f"/api/candidatos/{r['id_candidato']}/avatar" if r.get("tiene_foto") else None
+                item = {
+                    "id_postulacion": r["id_postulacion"],
+                    "fecha_postulacion": r["fecha_postulacion"].isoformat() if r.get("fecha_postulacion") else None,
+                    "estado_proceso": r.get("estado_proceso"),
+                    "id_candidato": r.get("id_candidato"),
+                    "nombre_completo": r.get("nombre_completo"),
+                    "email": r.get("email"),
+                    "foto_perfil_url": foto_url,
                 }
-                vacantes.append(vacante)
-                
-            logger.info(f"Devolviendo {len(vacantes)} vacantes")
-            return {"vacantes": vacantes}
+                lst.append(item)
+            return {"postulaciones": lst}
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error listar_vacantes_publicadas: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error interno listando vacantes: {str(e)}")
+        logger.error(f"Error listar_postulaciones_por_vacante: {e}")
+        raise HTTPException(status_code=500, detail="Error interno listando postulaciones")
     finally:
-        try: conn.close()
-        except Exception: pass
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+class PostulacionEstadoUpdate(BaseModel):
+    estado: str
+
+
+@app.put("/api/postulaciones/{id_postulacion}/estado")
+async def actualizar_estado_postulacion(id_postulacion: int, data: PostulacionEstadoUpdate, request: Request):
+    """Permite a la empresa actualizar el estado de una postulación propia."""
+    session_user = request.session.get("user") if hasattr(request, "session") else None
+    if not session_user or session_user.get("rol") != "Empresa":
+        raise HTTPException(status_code=401, detail="Solo empresas")
+
+    estado = (data.estado or "").strip()
+    validos = {"Recibida", "Revisión", "Entrevista", "Oferta", "Rechazada"}
+    if estado not in validos:
+        raise HTTPException(status_code=400, detail="Estado inválido")
+
+    email = session_user.get("email")
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            # Resolver empresa id
+            cur.execute(
+                """
+                SELECT e.ID_Empresa
+                FROM EMPRESA e
+                JOIN USUARIO u ON e.FK_ID_Usuario = u.ID_Usuario
+                WHERE u.Email = %s
+                LIMIT 1;
+                """,
+                (email,),
+            )
+            emp = cur.fetchone()
+            if not emp:
+                raise HTTPException(status_code=404, detail="Empresa no encontrada")
+            id_empresa = emp["id_empresa"]
+
+            # Verificar que la postulación pertenezca a una vacante de esta empresa
+            cur.execute(
+                """
+                SELECT p.ID_Postulacion
+                FROM POSTULACION p
+                JOIN VACANTE v ON p.FK_ID_Vacante = v.ID_Vacante
+                WHERE p.ID_Postulacion = %s AND v.FK_ID_Empresa = %s
+                LIMIT 1;
+                """,
+                (id_postulacion, id_empresa),
+            )
+            if not cur.fetchone():
+                raise HTTPException(status_code=404, detail="Postulación no encontrada o no autorizada")
+
+            cur.execute(
+                """
+                UPDATE POSTULACION
+                SET Estado_Proceso = %s
+                WHERE ID_Postulacion = %s
+                RETURNING ID_Postulacion;
+                """,
+                (estado, id_postulacion),
+            )
+            conn.commit()
+            return {"message": "Estado actualizado", "id_postulacion": id_postulacion, "estado": estado}
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        logger.error(f"Error actualizar_estado_postulacion: {e}")
+        raise HTTPException(status_code=500, detail="Error interno actualizando estado")
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+@app.get("/api/candidatos/{id_candidato}/cv")
+async def descargar_cv_candidato(id_candidato: int):
+    """Descarga el CV PDF del candidato por ID (para empresa)."""
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT CV_PDF_BIN, Nombre_Completo
+                FROM CANDIDATO
+                WHERE ID_Candidato = %s AND CV_PDF_BIN IS NOT NULL
+                LIMIT 1;
+                """,
+                (id_candidato,),
+            )
+            row = cur.fetchone()
+            if not row or not row[0]:
+                raise HTTPException(status_code=404, detail="Sin CV")
+            cv_bytes, nombre = row[0], row[1] or "candidato"
+            filename = f"cv_{nombre}.pdf".replace(" ", "_")
+            headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+            return Response(content=cv_bytes.tobytes() if hasattr(cv_bytes, "tobytes") else cv_bytes, media_type="application/pdf", headers=headers)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error descargar_cv_candidato: {e}")
+        raise HTTPException(status_code=500, detail="Error interno obteniendo CV")
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+@app.get("/api/candidatos/{id_candidato}/avatar")
+async def avatar_candidato_por_id(id_candidato: int):
+    """Devuelve el avatar del candidato por ID si existe."""
+    conn = get_db_connection()
+    if conn is None:
+        raise HTTPException(status_code=500, detail="Error de conexión a la DB")
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT Foto_Perfil_BIN
+                FROM CANDIDATO
+                WHERE ID_Candidato = %s AND Foto_Perfil_BIN IS NOT NULL
+                LIMIT 1;
+                """,
+                (id_candidato,),
+            )
+            row = cur.fetchone()
+            if not row or not row[0]:
+                raise HTTPException(status_code=404, detail="Sin avatar")
+            img_bytes = row[0]
+            return Response(content=img_bytes.tobytes() if hasattr(img_bytes, "tobytes") else img_bytes, media_type="image/png")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error avatar_candidato_por_id: {e}")
+        raise HTTPException(status_code=500, detail="Error interno obteniendo avatar")
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
 
 @app.post("/api/vacantes/{id_vacante}/postular")
 async def postular_a_vacante(id_vacante: int, request: Request):

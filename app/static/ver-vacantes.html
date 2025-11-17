@@ -223,10 +223,10 @@
       return `${day}/${month}/${year}`;
     }
 
-    // Redirige a la vista de candidato / Ver-aplicaciones para ver detalle y postular
+    // Redirige a la vista de postulantes de la vacante seleccionada (empresa)
     function viewVacante(id) {
       if (!id) return;
-      window.location.href = '/ver-aplicaciones?id=' + encodeURIComponent(id);
+      window.location.href = '/ver-postulantes?id=' + encodeURIComponent(id);
     }
 
     // Función para mapear estado a texto de UI

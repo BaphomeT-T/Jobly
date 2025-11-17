@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <base href="/">
+  <title>Ver Postulaciones - Jobly</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/static/auth.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+  </style>
+</head>
+<body class="bg-white min-h-screen font-['Poppins',sans-serif] overflow-x-hidden">
+  <!-- Header (reused with logout) -->
+  <header class="flex items-center justify-between px-[32px] pl-[32px] pr-[108px] pt-[24px] pb-[16px] border-b border-[#e5eae8] h-[86px] bg-white">
+    <a href="/home-postulantes" class="block h-[62px] w-[172px]">
+      <img src="/static/images/logo-login.png" alt="Jobly Logo" class="h-full w-full object-contain"
+           onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27172%27 height=%2762%27%3E%3Crect width=%27172%27 height=%2762%27 fill=%27%23f64da0%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-size=%2720%27%3EJobly%3C/text%3E%3C/svg%3E'" />
+    </a>
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-6">
+      <!-- Help Icon -->
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="#141514" stroke-width="1.5"/>
+        <path d="M9.09 9C9.325 8.33 9.835 7.81 10.5 7.57C11.165 7.33 11.903 7.39 12.516 7.74C13.129 8.09 13.563 8.69 13.72 9.38C13.877 10.07 13.745 10.79 13.35 11.38C12.955 11.97 12.33 12.38 11.62 12.51V13.5" stroke="#141514" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="12" cy="17" r="1" fill="#141514"/>
+      </svg>
+      <!-- Mail Icon -->
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M22 6L12 13L2 6" stroke="#141514" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <!-- Profile Icon (Purple) -->
+      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="#c89bfa"/>
+        <circle cx="12" cy="10" r="3" fill="white"/>
+        <path d="M6.168 18.849A6.5 6.5 0 0 1 12 15.5a6.5 6.5 0 0 1 5.832 3.349" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <button id="logoutBtn" class="border border-[#141514] text-[#141514] px-3 py-1 rounded-[24px] text-sm font-semibold hover:bg-[#141514] hover:text-white transition-colors">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <!-- Subheader Tabs -->
+  <section class="flex gap-[64px] items-end justify-center px-[108px] pt-[16px] pb-0 border-b border-[#e5eae8] h-[56px] bg-white relative">
+    <div class="flex flex-col gap-[16px] items-center justify-end max-w-[130px] cursor-pointer" onclick="window.location.href='/ver-aplicaciones'">
+      <p class="text-[#606261] text-[20px] font-medium">Buscar Vacante</p>
+      <div class="w-full h-[3px]"></div>
+    </div>
+    <div class="flex flex-col gap-[14px] items-center justify-end max-w-[160px] cursor-pointer">
+      <p class="text-[#f64da0] text-[20px] font-semibold">Ver Postulaciones</p>
+      <div class="w-full h-[3px] bg-gradient-to-r from-transparent via-[#f64da0] to-transparent"></div>
+    </div>
+    <div class="flex flex-col gap-[16px] items-center justify-end max-w-[130px] cursor-pointer" onclick="window.location.href='/home-postulantes'">
+      <p class="text-[#606261] text-[20px] font-medium">Actividades</p>
+      <div class="w-full h-[3px]"></div>
+    </div>
+    <!-- Pattern decorations -->
+    <div class="absolute bottom-0 left-[78px] top-0 w-[127px] opacity-10 pointer-events-none overflow-hidden">
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-5.51%] top-[-71.43%] w-[105.51%] object-cover" onerror="this.style.display='none'" />
+    </div>
+    <div class="absolute bottom-0 left-[197px] top-0 w-[85px] opacity-10 pointer-events-none overflow-hidden">
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-5.88%] top-[-71.43%] w-[157.65%] object-cover" onerror="this.style.display='none'" />
+    </div>
+    <div class="absolute bottom-0 right-[129px] top-0 w-[58px] opacity-10 pointer-events-none overflow-hidden">
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-58.62%] top-[-71.43%] w-[231.03%] object-cover" onerror="this.style.display='none'" />
+    </div>
+    <div class="absolute bottom-0 right-0 top-0 w-[127px] opacity-10 pointer-events-none overflow-hidden">
+      <img src="/static/images/pattern-login.png" alt="Pattern" class="absolute h-[239.29%] left-[-5.51%] top-[-71.43%] w-[105.51%] object-cover" onerror="this.style.display='none'" />
+    </div>
+  </section>
+
+  <main class="px-[108px] pt-[56px] pb-[160px]">
+    <h1 class="text-[40px] font-semibold text-black leading-[1.2] mb-[40px]">Vacantes</h1>
+    <!-- Search bar -->
+    <div class="border border-[#b8bdbb] rounded-[50px] px-[24px] py-[24px] h-[69px] flex items-center gap-[24px] mb-[40px] max-w-[599px]">
+      <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="11" cy="11" r="7" stroke="#141514" stroke-width="1.5"/>
+        <path d="M20 20L17 17" stroke="#141514" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input id="searchInput" type="text" placeholder="Search and Filter" class="text-[18px] font-medium text-[#a2a6a4] outline-none border-none bg-transparent flex-1 placeholder:text-[#a2a6a4]" />
+      <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 7H21M3 12H21M3 17H21" stroke="#141514" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- Table header -->
+    <div class="flex items-center gap-[32px] h-[64px] px-[24px] py-[16px]">
+      <div class="flex flex-1 gap-[100px] items-center">
+        <div class="flex items-center max-w-[220px] min-w-[220px]">
+          <p class="text-[#b080e8] text-[16px] font-semibold capitalize">Título</p>
+        </div>
+        <p class="text-[#b080e8] text-[16px] font-semibold capitalize max-w-[150px] w-[150px] tracking-[0.48px]">Modalidad</p>
+        <p class="text-[#b080e8] text-[16px] font-semibold capitalize max-w-[150px] tracking-[0.48px]">Fecha</p>
+        <p class="text-[#b080e8] text-[16px] font-semibold capitalize max-w-[150px] tracking-[0.48px]">Estado</p>
+      </div>
+      <div class="w-6 h-6"></div>
+    </div>
+
+    <!-- Rows container -->
+    <div id="postulacionesBody" class="space-y-2">
+      <div id="loadingState" class="text-center text-[#606261] py-8">Cargando postulaciones...</div>
+      <div id="emptyState" class="text-center text-[#606261] py-8 hidden">Sin postulaciones</div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-[#e5eae8] px-[108px] py-[24px] flex flex-col gap-[48px] items-center bg-white h-[235px]">
+    <div class="flex gap-[32px] items-end w-[1368px]">
+      <div class="flex-1"></div>
+      <div class="flex flex-col gap-[16px] items-end w-[156px]">
+        <img src="/static/images/logo-login.png" alt="Jobly Logo" class="h-[67px] w-[186px] object-cover"
+             onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27186%27 height=%2767%27%3E%3Crect width=%27186%27 height=%2767%27 fill=%27%23f64da0%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27Arial%27 font-size=%2724%27%3EJobly%3C/text%3E%3C/svg%3E'" />
+      </div>
+    </div>
+    <div class="flex items-center justify-center w-full relative">
+      <div class="flex items-center justify-center">
+        <p class="capitalize text-[12px] font-medium text-[rgba(0,0,0,0.5)]">Jobly Copyright</p>
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/>
+          <path d="M14.5 9.5C14.5 8.5 13.5 7.5 12 7.5C10.5 7.5 9.5 8.5 9.5 9.5C9.5 10.5 10.5 11 12 11C13.5 11 14.5 11.5 14.5 12.5C14.5 13.5 13.5 14.5 12 14.5C10.5 14.5 9.5 13.5 9.5 12.5" stroke="rgba(0,0,0,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <p class="capitalize text-[12px] font-medium text-[rgba(0,0,0,0.5)]">2025</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let allPostulaciones = [];
+    // Fetch candidate's applications
+    async function loadPostulaciones() {
+      const loading = document.getElementById('loadingState');
+      const empty = document.getElementById('emptyState');
+      try {
+        loading.classList.remove('hidden');
+        const resp = await fetch('/api/postulaciones/mias');
+        if (!resp.ok) {
+          if (resp.status === 401) { window.location.href = '/login'; return; }
+          throw new Error('Error al cargar postulaciones');
+        }
+        const data = await resp.json();
+        allPostulaciones = data.postulaciones || [];
+        renderRows(allPostulaciones);
+      } catch (e) {
+        console.error(e);
+        loading.textContent = 'Error al cargar postulaciones.';
+      }
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2,'0');
+      const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+      return day + '/' + months[date.getMonth()] + '/' + date.getFullYear();
+    }
+
+    function mapEstado(estado) {
+      const map = { 'Recibida':'Recibida', 'Revisión':'En revisión', 'Entrevista':'Entrevista', 'Oferta':'Oferta', 'Rechazada':'Rechazada', 'Closed':'Closed', 'Draft':'Draft' };
+      return map[estado] || estado;
+    }
+
+    function starIcon() {
+      return '<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3l2.472 6.354 6.528.354-5.09 4.34 1.59 6.602L12 17.9l-5.5 2.75 1.59-6.602-5.09-4.34 6.528-.354L12 3z" fill="#b080e8"/></svg>';
+    }
+
+    function actionIcon() {
+      return '<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="6" r="1.5" fill="#141514"/><circle cx="12" cy="12" r="1.5" fill="#141514"/><circle cx="12" cy="18" r="1.5" fill="#141514"/></svg>';
+    }
+
+    function createRow(p, index) {
+      const bg = index % 2 === 0 ? 'bg-[#f7f9f8]' : 'bg-white';
+      const border = index === 0 ? 'border border-[#a2a6a4]' : '';
+      return `<div class=\"${bg} ${border} flex gap-[32px] items-center h-[62px] px-[24px] py-[16px] rounded-[4px]\">\n        <div class=\"w-6 h-6 shrink-0\">${starIcon()}<\/div>\n        <div class=\"flex flex-1 items-center justify-between gap-[8px]\">\n          <p class=\"text-[#1d1e1d] text-[16px] font-semibold max-w-[220px] min-w-[220px] truncate\">${p.titulo || 'Sin título'}<\/p>\n          <p class=\"text-[#333434] text-[16px] font-medium capitalize max-w-[150px] w-[150px] truncate\">${p.modalidad || 'N/D'}<\/p>\n          <p class=\"text-[#333434] text-[14px] font-medium leading-[1.9] max-w-[170px] w-[170px] truncate\">${formatDate(p.fecha_postulacion)}<\/p>\n          <p class=\"text-[#333434] text-[16px] font-medium max-w-[150px] w-[150px] truncate\">${mapEstado(p.estado_proceso)}<\/p>\n        <\/div>\n        <div class=\"w-6 h-6 shrink-0\">${actionIcon()}<\/div>\n      <\/div>`;
+    }
+
+    function renderRows(list) {
+      const loading = document.getElementById('loadingState');
+      const empty = document.getElementById('emptyState');
+      const body = document.getElementById('postulacionesBody');
+      loading.classList.add('hidden');
+      body.innerHTML = '';
+      if (!list.length) { empty.classList.remove('hidden'); return; } else { empty.classList.add('hidden'); }
+      body.innerHTML = list.map(createRow).join('');
+    }
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase().trim();
+      if (!term) { renderRows(allPostulaciones); return; }
+      const filtered = allPostulaciones.filter(p => {
+        const hay = (p.titulo + ' ' + (p.modalidad||'') + ' ' + (p.estado_proceso||'')).toLowerCase();
+        return hay.includes(term);
+      });
+      renderRows(filtered);
+    });
+
+    document.addEventListener('DOMContentLoaded', loadPostulaciones);
+  </script>
+</body>
+</html>
